@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+argfile="$1"
+checkout="$2"
+
+[ -f "$argfile" ] || { echo "vessel: argfile not found: $argfile" >&2; exit 2; }
+[ -x "$checkout/mkiso.sh" ] || { echo "vessel: mkiso.sh not found or not executable in $checkout" >&2; exit 2; }
+
+set --
+while IFS= read -r line; do
+    set -- "$@" "$line"
+done < "$argfile"
+
+cd "$checkout"
+exec ./mkiso.sh "$@"
