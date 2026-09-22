@@ -5,10 +5,6 @@ edition = "2021"
 description = "A GTK4 frontend for void-mklive / noid-mklive"
 license = "GPL-3.0-or-later"
 
-[lib]
-name = "vessel"
-path = "src/lib.rs"
-
 [[bin]]
 name = "vessel"
 path = "src/main.rs"
