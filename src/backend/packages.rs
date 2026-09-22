@@ -27,14 +27,38 @@ mod tests {
     use std::os::unix::fs::PermissionsExt;
 
     fn fake_xbps_query() -> std::path::PathBuf {
-        let path = std::env::temp_dir().join(format!("vessel-fake-xbps-query-{}", std::process::id()));
-        let mut file = std::fs::File::create(&path).unwrap();
-        writeln!(file, "#!/bin/sh\n[ \"$2\" = \"firefox\" ] && exit 0\nexit 1").unwrap();
-        drop(file);
-        let mut perms = std::fs::metadata(&path).unwrap().permissions();
-        perms.set_mode(0o755);
-        std::fs::set_permissions(&path, perms).unwrap();
-        path
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let mut counter = 0;
+        loop {
+            let path = std::env::temp_dir().join(
+                format!("vessel-fake-xbps-query-{}-{}", nanos, counter)
+            );
+            match std::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(&path)
+            {
+                Ok(mut file) => {
+                    writeln!(file, "#!/bin/sh\n[ \"$2\" = \"firefox\" ] && exit 0\nexit 1").unwrap();
+                    file.sync_all().unwrap();
+                    drop(file);
+                    std::thread::sleep(std::time::Duration::from_millis(1));
+                    let mut perms = std::fs::metadata(&path).unwrap().permissions();
+                    perms.set_mode(0o755);
+                    std::fs::set_permissions(&path, perms).unwrap();
+                    return path;
+                }
+                Err(_) => {
+                    counter += 1;
+                    if counter > 100 {
+                        panic!("Could not create temp file after 100 attempts");
+                    }
+                }
+            }
+        }
     }
 
     #[test]
