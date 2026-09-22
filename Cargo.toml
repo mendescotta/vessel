@@ -1,0 +1,22 @@
+[package]
+name = "vessel"
+version = "0.1.0"
+edition = "2021"
+description = "A GTK4 frontend for void-mklive / noid-mklive"
+license = "GPL-3.0-or-later"
+
+[[bin]]
+name = "vessel"
+path = "src/main.rs"
+
+[dependencies]
+gtk = { package = "gtk4", version = "0.9", features = ["v4_12"] }
+gio = "0.20"
+glib = "0.20"
+gdk = { package = "gdk4", version = "0.9", features = ["v4_12"] }
+adw = { package = "libadwaita", version = "0.7", features = ["v1_6"] }
+async-channel = "2"
+
+[profile.release]
+opt-level = 2
+debug = true
