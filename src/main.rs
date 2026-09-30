@@ -2,6 +2,7 @@ mod backend;
 mod generate;
 mod output;
 mod profile;
+mod snapshot;
 mod ui;
 
 use adw::prelude::*;
