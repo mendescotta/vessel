@@ -1,5 +1,6 @@
 mod backend;
 mod generate;
+mod output;
 mod profile;
 mod ui;
 
