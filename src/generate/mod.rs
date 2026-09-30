@@ -1,6 +1,8 @@
+pub mod bootloader;
 pub mod desktop;
 pub mod init;
 pub mod repos;
+pub mod shell;
 pub mod userland;
 
 use crate::profile::Profile;
@@ -62,3 +64,7 @@ pub fn enabled_services(p: &Profile) -> Vec<String> {
 #[cfg(test)]
 #[path = "resolve_tests.rs"]
 mod resolve_tests;
+
+#[cfg(test)]
+#[path = "stage_tests.rs"]
+mod stage_tests;
