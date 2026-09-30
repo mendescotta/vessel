@@ -1,0 +1,14 @@
+#!/bin/sh
+# pkexec target: runs a vessel-generated build.sh from its output folder.
+# Only folders vessel wrote (build.sh + profile.toml side by side) are accepted.
+set -eu
+
+[ "$#" -eq 1 ] || { echo "usage: vessel-run-build <output folder>" >&2; exit 2; }
+outdir="$1"
+
+[ -d "$outdir" ] || { echo "vessel: not a folder: $outdir" >&2; exit 2; }
+[ -f "$outdir/profile.toml" ] || { echo "vessel: $outdir has no profile.toml (not a vessel output folder)" >&2; exit 2; }
+[ -f "$outdir/build.sh" ] && [ -x "$outdir/build.sh" ] || { echo "vessel: $outdir/build.sh missing or not executable" >&2; exit 2; }
+
+cd "$outdir"
+exec ./build.sh
