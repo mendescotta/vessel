@@ -1,3 +1,4 @@
+pub mod assets;
 pub mod bootloader;
 pub mod desktop;
 pub mod init;
@@ -68,3 +69,7 @@ mod resolve_tests;
 #[cfg(test)]
 #[path = "stage_tests.rs"]
 mod stage_tests;
+
+#[cfg(test)]
+#[path = "assets_tests.rs"]
+mod assets_tests;
