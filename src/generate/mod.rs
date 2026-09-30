@@ -3,10 +3,19 @@ pub mod bootloader;
 pub mod desktop;
 pub mod init;
 pub mod repos;
+pub mod script;
 pub mod shell;
 pub mod userland;
 
+use crate::profile::validate::ValidProfile;
 use crate::profile::Profile;
+
+pub use script::generate_with;
+
+/// The standalone build script for a validated profile.
+pub fn generate(v: &ValidProfile) -> String {
+    generate_with(v, &repos::voidlab_repo_path())
+}
 
 pub(crate) fn dedup(items: Vec<String>) -> Vec<String> {
     let mut out: Vec<String> = Vec::with_capacity(items.len());
@@ -73,3 +82,7 @@ mod stage_tests;
 #[cfg(test)]
 #[path = "assets_tests.rs"]
 mod assets_tests;
+
+#[cfg(test)]
+#[path = "script_tests.rs"]
+mod script_tests;
