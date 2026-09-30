@@ -16,6 +16,8 @@ glib = "0.20"
 gdk = { package = "gdk4", version = "0.9", features = ["v4_12"] }
 adw = { package = "libadwaita", version = "0.7", features = ["v1_6"] }
 async-channel = "2"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
 
 [profile.release]
 opt-level = 2

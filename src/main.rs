@@ -1,7 +1,8 @@
 mod backend;
+mod generate;
+mod profile;
 mod ui;
 
-use gio::prelude::*;
 use adw::prelude::*;
 
 const APP_ID: &str = "org.voidlinux.vessel";
