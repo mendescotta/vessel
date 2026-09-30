@@ -1,0 +1,120 @@
+use super::*;
+use crate::profile::{Desktop, DisplayManager as Dm, Init, Profile, RepoPreset, Userland};
+
+fn count(v: &[String], s: &str) -> usize {
+    v.iter().filter(|x| *x == s).count()
+}
+
+#[test]
+fn repo_order_custom_presets_official() {
+    let mut p = Profile::new_default();
+    p.repos.custom = vec!["https://example.org/repo".into()];
+    p.repos.presets = vec![RepoPreset::Noid, RepoPreset::Nonfree];
+    assert_eq!(
+        repos::repo_list_with(&p, "/vl/repo"),
+        vec![
+            "https://example.org/repo".to_string(),
+            repos::NOID.to_string(),
+            format!("{}/nonfree", repos::OFFICIAL),
+            repos::OFFICIAL.to_string(),
+        ]
+    );
+}
+
+#[test]
+fn multilib_with_nonfree_adds_multilib_nonfree() {
+    let mut p = Profile::new_default();
+    p.repos.presets = vec![RepoPreset::Multilib, RepoPreset::Nonfree];
+    let list = repos::repo_list_with(&p, "/vl/repo");
+    assert!(list.contains(&format!("{}/multilib", repos::OFFICIAL)));
+    assert!(list.contains(&format!("{}/multilib/nonfree", repos::OFFICIAL)));
+}
+
+#[test]
+fn voidlab_preset_uses_given_path_and_dedups() {
+    let mut p = Profile::new_default();
+    p.repos.presets = vec![RepoPreset::Voidlab];
+    p.repos.custom = vec!["/vl/repo".into()];
+    assert_eq!(repos::repo_list_with(&p, "/vl/repo"), vec!["/vl/repo".to_string(), repos::OFFICIAL.to_string()]);
+}
+
+#[test]
+fn voidlab_path_prefers_env_then_home() {
+    assert_eq!(repos::voidlab_repo_path_from(Some("/x".into()), Some("/home/u".into())), "/x");
+    assert_eq!(
+        repos::voidlab_repo_path_from(None, Some("/home/u".into())),
+        "/home/u/Projects/voidlab/voidlab/repo"
+    );
+}
+
+#[test]
+fn required_packages_dinit_chimera_gnome_lightdm() {
+    let mut p = Profile::new_default();
+    p.init = Init::DinitChimera;
+    p.userland = Userland::Chimerautils;
+    p.desktops = vec![Desktop::Gnome];
+    p.display_manager = Dm::Lightdm;
+    let pkgs = required_packages(&p);
+    for want in ["linux", "base-system-dinit", "dinit-chimera", "dinit-void", "dracut", "chimerautils", "gnome", "lightdm", "lightdm-gtk3-greeter", "dbus"] {
+        assert_eq!(count(&pkgs, want), 1, "{want} in {pkgs:?}");
+    }
+    assert!(!pkgs.contains(&"base-system".to_string()));
+}
+
+#[test]
+fn console_profile_has_no_graphical_base() {
+    let pkgs = required_packages(&Profile::new_default());
+    assert!(pkgs.contains(&"base-system".to_string()));
+    assert!(!pkgs.contains(&"xorg-minimal".to_string()));
+    assert!(!pkgs.contains(&"NetworkManager".to_string()));
+}
+
+#[test]
+fn dynamod_has_no_dracut() {
+    let mut p = Profile::new_default();
+    p.init = Init::Dynamod;
+    let pkgs = required_packages(&p);
+    assert!(pkgs.contains(&"dynamod".to_string()));
+    assert!(!pkgs.contains(&"dracut".to_string()));
+}
+
+#[test]
+fn install_packages_appends_extra_once() {
+    let mut p = Profile::new_default();
+    p.packages.extra = vec!["firefox".into(), "linux".into()];
+    let pkgs = install_packages(&p);
+    assert_eq!(count(&pkgs, "linux"), 1);
+    assert_eq!(pkgs.last().map(String::as_str), Some("firefox"));
+}
+
+#[test]
+fn services_union_dedup_and_disable() {
+    let mut p = Profile::new_default();
+    p.desktops = vec![Desktop::Xfce, Desktop::Gnome];
+    p.display_manager = Dm::Lightdm;
+    p.services.enable = vec!["sshd".into(), "dbus".into()];
+    p.services.disable = vec!["agetty-tty2".into()];
+    let s = enabled_services(&p);
+    assert_eq!(count(&s, "dbus"), 1);
+    assert!(s.contains(&"lightdm".to_string()));
+    assert!(s.contains(&"sshd".to_string()));
+    assert!(s.contains(&"agetty-tty1".to_string()));
+    assert!(!s.contains(&"agetty-tty2".to_string()));
+}
+
+#[test]
+fn ignored_packages_are_init_ignores_plus_exclude() {
+    let mut p = Profile::new_default();
+    p.init = Init::Dynamod;
+    p.packages.exclude = vec!["nano".into()];
+    assert_eq!(ignored_packages(&p), vec!["runit-void".to_string(), "nano".to_string()]);
+}
+
+#[test]
+fn validate_rejects_excluding_required_package() {
+    let mut p = Profile::new_default();
+    p.packages.exclude = vec!["base-system".into()];
+    let (issues, valid) = crate::profile::validate::validate(&p);
+    assert!(valid.is_none());
+    assert!(issues.iter().any(|i| i.field == "packages" && i.message.contains("base-system")));
+}
