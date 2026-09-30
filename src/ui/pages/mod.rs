@@ -14,6 +14,7 @@ pub mod system;
 use std::rc::Rc;
 
 use adw::prelude::*;
+use gtk::gio;
 
 use crate::profile::validate::{Issue, Severity};
 use crate::profile::Profile;
@@ -173,4 +174,153 @@ pub fn show_error(widget: &impl IsA<gtk::Widget>, heading: &str, body: &str) {
     let dialog = adw::AlertDialog::builder().heading(heading).body(body).build();
     dialog.add_response("ok", "OK");
     dialog.present(Some(widget));
+}
+
+/// An editable list of names (packages, services, repo URLs). Typing several
+/// whitespace-separated names adds them all. With `check_packages`, each entry
+/// is looked up with `xbps-query -R` in the background and flagged if missing.
+pub fn list_group(
+    s: &Shared,
+    title: &str,
+    description: &str,
+    get: fn(&Profile) -> &Vec<String>,
+    get_mut: fn(&mut Profile) -> &mut Vec<String>,
+    check_packages: bool,
+) -> adw::PreferencesGroup {
+    use std::cell::RefCell;
+    use std::collections::HashMap;
+
+    use crate::backend::packages::{package_exists, PackageCheck};
+
+    let group = adw::PreferencesGroup::builder().title(title).description(description).build();
+    let add = adw::EntryRow::builder().title("Add…").show_apply_button(true).build();
+    group.add(&add);
+
+    let rows: Rc<RefCell<Vec<adw::ActionRow>>> = Rc::default();
+    let rendered: Rc<RefCell<Vec<String>>> = Rc::default();
+    let lookups: Rc<RefCell<HashMap<String, PackageCheck>>> = Rc::default();
+
+    let render: Rc<dyn Fn(&Profile)> = {
+        let (group, rows, rendered, lookups, s) = (group.clone(), rows.clone(), rendered.clone(), lookups.clone(), s.clone());
+        Rc::new(move |p: &Profile| {
+            let items = get(p);
+            if *rendered.borrow() == *items {
+                return;
+            }
+            for row in rows.borrow_mut().drain(..) {
+                group.remove(&row);
+            }
+            for item in items {
+                let row = adw::ActionRow::builder().title(item).build();
+                let status = gtk::Image::new();
+                row.add_prefix(&status);
+                if check_packages {
+                    flag(&status, lookups.borrow().get(item));
+                    if !lookups.borrow().contains_key(item) {
+                        let (name, lookups, status) = (item.clone(), lookups.clone(), status.clone());
+                        glib::spawn_future_local(async move {
+                            let lookup = name.clone();
+                            let result = gio::spawn_blocking(move || package_exists(&lookup)).await;
+                            if let Ok(Ok(check)) = result {
+                                flag(&status, Some(&check));
+                                lookups.borrow_mut().insert(name, check);
+                            }
+                        });
+                    }
+                }
+                let remove = gtk::Button::builder()
+                    .icon_name("list-remove-symbolic")
+                    .valign(gtk::Align::Center)
+                    .css_classes(["flat"])
+                    .tooltip_text("Remove")
+                    .build();
+                let (s, name) = (s.clone(), item.clone());
+                remove.connect_clicked(move |_| state::update(&s, |p| get_mut(p).retain(|x| *x != name)));
+                row.add_suffix(&remove);
+                group.add(&row);
+                rows.borrow_mut().push(row);
+            }
+            *rendered.borrow_mut() = items.clone();
+        })
+    };
+
+    fn flag(status: &gtk::Image, check: Option<&PackageCheck>) {
+        match check {
+            Some(PackageCheck::NotFound) => {
+                status.set_icon_name(Some("dialog-warning-symbolic"));
+                status.set_tooltip_text(Some("Not found in the configured repositories"));
+            }
+            _ => status.set_icon_name(None),
+        }
+    }
+
+    render(&s.borrow().profile);
+    {
+        let render = render.clone();
+        state::on_change(s, move |p, _, _| render(p));
+    }
+    let s = s.clone();
+    add.connect_apply(move |entry| {
+        let text = entry.text().to_string();
+        state::update(&s, |p| {
+            let list = get_mut(p);
+            for word in text.split_whitespace() {
+                if !list.iter().any(|x| x == word) {
+                    list.push(word.to_string());
+                }
+            }
+        });
+        entry.set_text("");
+    });
+    group
+}
+
+/// A row that picks a file or folder into an optional path field, with a clear button.
+pub fn path_row(
+    s: &Shared,
+    title: &str,
+    folder: bool,
+    get: fn(&Profile) -> Option<std::path::PathBuf>,
+    set: fn(&mut Profile, Option<std::path::PathBuf>),
+) -> adw::ActionRow {
+    let row = adw::ActionRow::builder().title(title).build();
+    let subtitle = move |p: &Profile| get(p).map(|x| x.display().to_string()).unwrap_or_else(|| "None".into());
+    row.set_subtitle(&subtitle(&s.borrow().profile));
+
+    let choose = gtk::Button::builder().label("Choose…").valign(gtk::Align::Center).build();
+    let clear = gtk::Button::builder()
+        .icon_name("edit-clear-symbolic")
+        .valign(gtk::Align::Center)
+        .css_classes(["flat"])
+        .tooltip_text("Clear")
+        .build();
+    row.add_suffix(&choose);
+    row.add_suffix(&clear);
+
+    {
+        let s = s.clone();
+        let title = title.to_string();
+        choose.connect_clicked(move |btn| {
+            let dialog = gtk::FileDialog::builder().title(&title).build();
+            let window = btn.root().and_downcast::<gtk::Window>();
+            let s = s.clone();
+            let done = move |res: Result<gio::File, glib::Error>| {
+                if let Some(path) = res.ok().and_then(|f| f.path()) {
+                    state::update(&s, |p| set(p, Some(path)));
+                }
+            };
+            if folder {
+                dialog.select_folder(window.as_ref(), gio::Cancellable::NONE, done);
+            } else {
+                dialog.open(window.as_ref(), gio::Cancellable::NONE, done);
+            }
+        });
+    }
+    {
+        let s = s.clone();
+        clear.connect_clicked(move |_| state::update(&s, |p| set(p, None)));
+    }
+    let row2 = row.clone();
+    state::on_change(s, move |p, _, _| row2.set_subtitle(&subtitle(p)));
+    row
 }
