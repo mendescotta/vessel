@@ -30,10 +30,6 @@ pub fn preset_urls(preset: RepoPreset, all: &[RepoPreset], voidlab: &str) -> Vec
 }
 
 /// Custom repos first, then presets in profile order, then the official repo.
-pub fn repo_list(p: &Profile) -> Vec<String> {
-    repo_list_with(p, &voidlab_repo_path())
-}
-
 pub fn repo_list_with(p: &Profile, voidlab: &str) -> Vec<String> {
     let mut out = p.repos.custom.clone();
     for preset in &p.repos.presets {
