@@ -207,3 +207,80 @@ fn work_guard_rejects_root_at_runtime() {
     let code = std::process::Command::new("bash").arg("-c").arg(&snippet).status().unwrap().code();
     assert_eq!(code, Some(7));
 }
+
+/// The generated text from the line starting with `from` up to (not including)
+/// the line starting with `to`.
+fn between<'a>(s: &'a str, from: &str, to: &str) -> &'a str {
+    let start = s.find(from).unwrap_or_else(|| panic!("no {from:?}"));
+    let end = start + s[start..].find(to).unwrap_or_else(|| panic!("no {to:?}"));
+    &s[start..end]
+}
+
+fn run_bash(snippet: &str, cwd: &std::path::Path) -> (Option<i32>, String) {
+    let out = std::process::Command::new("bash").arg("-c").arg(snippet).current_dir(cwd).output().unwrap();
+    (out.status.code(), String::from_utf8_lossy(&out.stdout).trim().to_string())
+}
+
+fn scratch(tag: &str) -> PathBuf {
+    let d = std::env::temp_dir().join(format!("vessel-work-{tag}-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&d);
+    std::fs::create_dir_all(&d).unwrap();
+    d
+}
+
+#[test]
+fn relative_work_is_made_absolute() {
+    let s = gen(Profile::new_default());
+    let header = between(&s, "WORK=", "ROOTFS=");
+    let cwd = scratch("rel");
+    let (_, work) = run_bash(&format!("HERE=/h\nWORK=build/\n{header}echo \"$WORK\""), &cwd);
+    assert_eq!(work, format!("{}/build", cwd.display()));
+}
+
+#[test]
+fn wipe_refuses_a_folder_vessel_did_not_create() {
+    let s = gen(Profile::new_default());
+    let guard = between(&s, "case \"$WORK\"", "rm -rf");
+    let run = |work: &std::path::Path| {
+        let snippet = format!("die() {{ exit 7; }}\numount_chroot() {{ :; }}\nHERE=/h\nWORK='{}'\n{guard}exit 0", work.display());
+        run_bash(&snippet, &std::env::temp_dir()).0
+    };
+    let foreign = scratch("foreign");
+    std::fs::write(foreign.join("important"), "x").unwrap();
+    assert_eq!(run(&foreign), Some(7), "non-empty folder without marker");
+    std::fs::write(foreign.join(".vessel-work"), "").unwrap();
+    assert_eq!(run(&foreign), Some(0), "marked scratch folder");
+    assert_eq!(run(&scratch("empty")), Some(0), "empty folder");
+    assert_eq!(run(&std::env::temp_dir().join("vessel-no-such-dir")), Some(0), "missing folder");
+    assert!(s.contains("touch \"$WORK/.vessel-work\""));
+}
+
+#[test]
+fn mount_guard_catches_a_mount_at_work_itself() {
+    let s = gen(Profile::new_default());
+    let guard = between(&s, "case \"$WORK\"", "rm -rf");
+    let dir = scratch("mnt");
+    let mounts = dir.join("mounts");
+    let work = dir.join("w");
+    let run = |line: String| {
+        std::fs::write(&mounts, line).unwrap();
+        let snippet = format!(
+            "die() {{ exit 7; }}\numount_chroot() {{ :; }}\nHERE=/h\nWORK='{}'\n{}exit 0",
+            work.display(),
+            guard.replace("/proc/mounts", &mounts.display().to_string())
+        );
+        run_bash(&snippet, &dir).0
+    };
+    assert_eq!(run(format!("tmpfs {} tmpfs rw 0 0\n", work.display())), Some(7));
+    assert_eq!(run(format!("proc {}/rootfs/proc proc rw 0 0\n", work.display())), Some(7));
+    assert_eq!(run(format!("tmpfs {}-other tmpfs rw 0 0\n", work.display())), Some(0));
+}
+
+#[test]
+fn free_space_is_checked_where_work_will_live() {
+    let s = gen(Profile::new_default());
+    let check = between(&s, "free_dir=", "free_gb=");
+    let (_, dir) = run_bash(&format!("WORK=/nonexistent-vessel/a/b\n{check}echo \"$free_dir\""), &std::env::temp_dir());
+    assert_eq!(dir, "/");
+    assert!(s.contains("df --output=avail -BG \"$free_dir\""));
+}

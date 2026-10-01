@@ -8,6 +8,8 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORK="${WORK:-$HERE/work}"
+if [ "${WORK#/}" = "$WORK" ]; then WORK="$PWD/$WORK"; fi
+while [ "$WORK" != / ] && [ "${WORK%/}" != "$WORK" ]; do WORK="${WORK%/}"; done
 ROOTFS="$WORK/rootfs"
 ISODIR="$WORK/iso"
 OUT="${OUT:-$HERE/out}"
@@ -78,8 +80,10 @@ need mkfs.vfat dosfstools
 need mcopy mtools
 need_file /usr/lib/grub/i386-pc/boot_hybrid.img grub
 [ "$missing" -eq 0 ] || die "install the missing host packages and re-run"
-free_gb=$(df --output=avail -BG "$HERE" | tail -1 | tr -dc 0-9)
-[ "${free_gb:-0}" -ge 10 ] || die "need at least 10 GiB free under $HERE (have ${free_gb:-0} GiB)"
+free_dir="$WORK"
+while [ ! -d "$free_dir" ]; do free_dir="$(dirname "$free_dir")"; done
+free_gb=$(df --output=avail -BG "$free_dir" | tail -1 | tr -dc 0-9)
+[ "${free_gb:-0}" -ge 10 ] || die "need at least 10 GiB free under $free_dir (have ${free_gb:-0} GiB)"
 
 # --- 2. repositories: custom, then presets, then official ---
 REPO_ARGS=(
@@ -90,12 +94,17 @@ REPO_ARGS=(
 case "$WORK" in
 	"" | / | /home | /root | "$HERE") die "refusing to use WORK=$WORK as the scratch directory" ;;
 esac
+# Only ever wipe a folder this script created (marked with .vessel-work).
+if [ -d "$WORK" ] && [ ! -e "$WORK/.vessel-work" ] && [ -n "$(ls -A "$WORK")" ]; then
+	die "refusing to wipe $WORK: not a vessel scratch folder (no .vessel-work); remove it yourself or set WORK elsewhere"
+fi
 umount_chroot
-if grep -qF " $WORK/" /proc/mounts; then
+if awk -v w="$WORK" '$2 == w || index($2, w "/") == 1 { found = 1 } END { exit !found }' /proc/mounts; then
 	die "something is still mounted under $WORK; unmount it before rebuilding"
 fi
 rm -rf "$WORK"
 mkdir -p "$ROOTFS/var/db/xbps/keys" "$ROOTFS/etc/xbps.d" "$ISODIR/boot" "$OUT"
+touch "$WORK/.vessel-work"
 cp -a /var/db/xbps/keys/. "$ROOTFS/var/db/xbps/keys/"
 info "Installing 9 packages into $ROOTFS"
 XBPS_ARCH="$ARCH" xbps-install -S -y -r "$ROOTFS" -C "$ROOTFS/etc/xbps.d" "${REPO_ARGS[@]}" \
