@@ -77,6 +77,8 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
     }
     if !is_token(&p.kernel) {
         error("kernel", format!("kernel package {:?} must be a single package name", p.kernel));
+    } else if is_option(&p.kernel) {
+        error("kernel", format!("kernel package {:?} can't start with '-'", p.kernel));
     }
 
     // Bootloaders and firmware coverage.
@@ -116,6 +118,8 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
     for url in &p.repos.custom {
         if !is_token(url) {
             error("repos", format!("repository {url:?} must be a single URL or path"));
+        } else if is_option(url) {
+            error("repos", format!("repository {url:?} can't start with '-'"));
         }
     }
 
@@ -141,6 +145,8 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
         for item in list {
             if !is_token(item) {
                 error(field, format!("{item:?} must be a single name without spaces"));
+            } else if is_option(item) {
+                error(field, format!("{item:?} can't start with '-'"));
             }
         }
     }
@@ -194,6 +200,12 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
 
 fn is_token(s: &str) -> bool {
     !s.is_empty() && !s.chars().any(char::is_whitespace)
+}
+
+/// Values passed as command arguments (xbps-install, ln, -R) would be read
+/// as options if they started with '-'.
+fn is_option(s: &str) -> bool {
+    s.starts_with('-')
 }
 
 fn valid_hostname(s: &str) -> bool {
