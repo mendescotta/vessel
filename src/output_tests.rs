@@ -98,3 +98,23 @@ fn leaves_work_and_out_alone() {
     assert!(dir.join("out/old.iso").exists());
     std::fs::remove_dir_all(&dir).ok();
 }
+
+#[test]
+fn resave_does_not_change_a_script_that_is_running() {
+    use std::io::Read;
+    let dir = tmp("running");
+    let script = save_output_with(&valid(&Profile::new_default()), &dir, "/vl").unwrap();
+    let before = std::fs::read_to_string(&script).unwrap();
+    // bash keeps the script open and reads it as it goes.
+    let mut running = std::fs::File::open(&script).unwrap();
+
+    let mut p = Profile::new_default();
+    p.name = "renamed-while-building".into();
+    save_output_with(&valid(&p), &dir, "/vl").unwrap();
+
+    let mut seen = String::new();
+    running.read_to_string(&mut seen).unwrap();
+    assert!(seen == before, "the open build.sh changed under the running reader");
+    assert!(std::fs::read_to_string(&script).unwrap().contains("renamed-while-building"));
+    assert_eq!(mode(&script), 0o755);
+}

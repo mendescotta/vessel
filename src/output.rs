@@ -60,9 +60,15 @@ pub fn save_output_with(v: &ValidProfile, dir: &Path, voidlab_repo: &str) -> io:
     Ok(script)
 }
 
+/// Writes through a temp file and a rename, so a reader that already has the
+/// old file open (bash running build.sh reads it as it goes) keeps the old
+/// contents instead of seeing new bytes at old offsets.
 fn write_mode(path: &Path, contents: &str, mode: u32) -> io::Result<()> {
-    fs::write(path, contents)?;
-    fs::set_permissions(path, fs::Permissions::from_mode(mode))
+    let name = path.file_name().expect("output paths have a file name").to_string_lossy();
+    let tmp = path.with_file_name(format!(".{name}.tmp"));
+    fs::write(&tmp, contents)?;
+    fs::set_permissions(&tmp, fs::Permissions::from_mode(mode))?;
+    fs::rename(&tmp, path)
 }
 
 fn same_path(a: &Path, b: &Path) -> bool {
