@@ -3,8 +3,6 @@ use crate::profile::{Profile, RepoPreset};
 pub const OFFICIAL: &str = "https://repo-default.voidlinux.org/current";
 pub const NOID: &str = "https://github.com/noid-linux/xbps-repo/releases/latest/download";
 
-/// Where the voidlab overlay repo lives. Resolved when the script is generated,
-/// because the build runs as root where `$HOME` points elsewhere.
 pub fn voidlab_repo_path() -> String {
     voidlab_repo_path_from(std::env::var("VESSEL_VOIDLAB_REPO").ok(), std::env::var("HOME").ok())
 }
@@ -29,7 +27,6 @@ pub fn preset_urls(preset: RepoPreset, all: &[RepoPreset], voidlab: &str) -> Vec
     }
 }
 
-/// Custom repos first, then presets in profile order, then the official repo.
 pub fn repo_list_with(p: &Profile, voidlab: &str) -> Vec<String> {
     let mut out = p.repos.custom.clone();
     for preset in &p.repos.presets {

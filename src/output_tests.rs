@@ -82,7 +82,6 @@ fn resave_with_overlay_already_in_folder_keeps_it() {
     std::fs::create_dir_all(dir.join("overlay")).unwrap();
     let mut p = Profile::new_default();
     p.overlay_dir = Some(dir.join("overlay"));
-    // Re-saving a profile that was loaded from this very folder must keep the overlay.
     std::fs::write(dir.join("overlay/keep"), "k").unwrap();
     save_output_with(&valid(&p), &dir, "/vl").unwrap();
     assert_eq!(std::fs::read_to_string(dir.join("overlay/keep")).unwrap(), "k");
@@ -105,7 +104,6 @@ fn resave_does_not_change_a_script_that_is_running() {
     let dir = tmp("running");
     let script = save_output_with(&valid(&Profile::new_default()), &dir, "/vl").unwrap();
     let before = std::fs::read_to_string(&script).unwrap();
-    // bash keeps the script open and reads it as it goes.
     let mut running = std::fs::File::open(&script).unwrap();
 
     let mut p = Profile::new_default();

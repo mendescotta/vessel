@@ -1,8 +1,3 @@
-//! Wizard pages plus the small row helpers they share. Every helper keeps its
-//! widget and the shared profile in sync both ways: user edits go through
-//! `state::update`, and a `Change::Replace` (open / new / snapshot) reloads
-//! the widget from the new profile.
-
 pub mod boot;
 pub mod desktop;
 pub mod output;
@@ -20,7 +15,6 @@ use crate::profile::validate::{Issue, Severity};
 use crate::profile::Profile;
 use crate::ui::state::{self, Change, Shared};
 
-/// Switches the wizard to the page with this name.
 pub type Navigate = Rc<dyn Fn(&str)>;
 
 pub const START: &str = "start";
@@ -31,7 +25,6 @@ pub const REPOS: &str = "repos";
 pub const REVIEW: &str = "review";
 pub const OUTPUT: &str = "output";
 
-/// (name, sidebar title) in wizard order.
 pub const ORDER: &[(&str, &str)] = &[
     (START, "Start"),
     (SYSTEM, "System"),
@@ -42,7 +35,6 @@ pub const ORDER: &[(&str, &str)] = &[
     (OUTPUT, "Output & build"),
 ];
 
-/// A list of the current issues for `fields` (all fields when empty), kept up to date.
 pub fn issues_group(s: &Shared, fields: &'static [&'static str]) -> adw::PreferencesGroup {
     let group = adw::PreferencesGroup::new();
     let list = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(4).build();
@@ -76,7 +68,6 @@ pub fn issues_group(s: &Shared, fields: &'static [&'static str]) -> adw::Prefere
     group
 }
 
-/// A combo row over an axis enum.
 pub fn enum_row<T: Copy + PartialEq + 'static>(
     s: &Shared,
     title: &str,
@@ -106,7 +97,6 @@ pub fn enum_row<T: Copy + PartialEq + 'static>(
     row
 }
 
-/// A text entry row bound to a string field.
 pub fn text_row(s: &Shared, title: &str, get: fn(&Profile) -> String, set: fn(&mut Profile, String)) -> adw::EntryRow {
     let row = adw::EntryRow::builder().title(title).text(get(&s.borrow().profile)).build();
     let s2 = s.clone();
@@ -123,7 +113,6 @@ pub fn text_row(s: &Shared, title: &str, get: fn(&Profile) -> String, set: fn(&m
     row
 }
 
-/// A switch row bound to a boolean view of the profile (a flag or list membership).
 pub fn switch_row(
     s: &Shared,
     title: &str,
@@ -144,7 +133,6 @@ pub fn switch_row(
     });
     let row2 = row.clone();
     state::on_change(s, move |p, _, _| {
-        // Membership can change from elsewhere (e.g. "add required repos"), so sync on every change.
         if row2.is_active() != get(p) {
             row2.set_active(get(p));
         }
@@ -152,7 +140,6 @@ pub fn switch_row(
     row
 }
 
-/// Adds or removes `item` in `list`, keeping order.
 pub fn toggle_in<T: PartialEq>(list: &mut Vec<T>, item: T, on: bool) {
     let present = list.contains(&item);
     if on && !present {
@@ -162,7 +149,6 @@ pub fn toggle_in<T: PartialEq>(list: &mut Vec<T>, item: T, on: bool) {
     }
 }
 
-/// A scrolling preferences page with a title/description header group.
 pub fn page(title: &str, description: &str) -> adw::PreferencesPage {
     let page = adw::PreferencesPage::new();
     let header = adw::PreferencesGroup::builder()
@@ -179,9 +165,6 @@ pub fn show_error(widget: &impl IsA<gtk::Widget>, heading: &str, body: &str) {
     dialog.present(Some(widget));
 }
 
-/// An editable list of names (packages, services, repo URLs). Typing several
-/// whitespace-separated names adds them all. With `check_packages`, each entry
-/// is looked up with `xbps-query -R` in the background and flagged if missing.
 pub fn list_group(
     s: &Shared,
     title: &str,
@@ -278,7 +261,6 @@ pub fn list_group(
     group
 }
 
-/// A row that picks a file or folder into an optional path field, with a clear button.
 pub fn path_row(
     s: &Shared,
     title: &str,

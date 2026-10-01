@@ -5,7 +5,6 @@ use crate::generate::{enabled_services, repos, required_packages};
 use crate::profile::validate::required_presets;
 use crate::profile::{Bootloader, Desktop, DisplayManager, Init, Profile, RepoPreset, Userland};
 
-/// Read-only access to the host, injectable for tests.
 pub trait HostProbe {
     fn read(&self, path: &str) -> Option<String>;
     fn list(&self, path: &str) -> Option<Vec<String>>;
@@ -39,8 +38,6 @@ impl HostProbe for RealHost {
     }
 }
 
-/// Seeds a profile from the running system. Never fails: anything it can't
-/// read falls back to a default and adds a warning.
 pub fn snapshot(host: &dyn HostProbe) -> (Profile, Vec<String>) {
     snapshot_with(host, &repos::voidlab_repo_path())
 }
@@ -69,7 +66,6 @@ pub fn snapshot_with(host: &dyn HostProbe, voidlab_repo: &str) -> (Profile, Vec<
         }
     }
 
-    // Init and the directory holding its enabled services.
     let enabled: Vec<String> = if host.exists("/etc/dynamod") {
         p.init = Init::Dynamod;
         host.list("/etc/dynamod/services")
@@ -140,9 +136,7 @@ pub fn snapshot_with(host: &dyn HostProbe, voidlab_repo: &str) -> (Profile, Vec<
     (p, warnings)
 }
 
-/// Maps repository= lines from xbps.d onto presets; unknown ones become custom.
 fn read_repos(host: &dyn HostProbe, voidlab_repo: &str, p: &mut Profile, warnings: &mut Vec<String>) {
-    // Same-named files in /etc/xbps.d override /usr/share/xbps.d, as in xbps.
     let mut files: BTreeMap<String, String> = BTreeMap::new();
     let mut any_dir = false;
     for dir in ["/usr/share/xbps.d", "/etc/xbps.d"] {
@@ -178,8 +172,6 @@ fn read_repos(host: &dyn HostProbe, voidlab_repo: &str, p: &mut Profile, warning
     }
 }
 
-/// `Some(Some(preset))` for a known repo, `Some(None)` for the official main
-/// repo (always added), `None` for anything else.
 fn classify(url: &str, voidlab_repo: &str) -> Option<Option<RepoPreset>> {
     if url == voidlab_repo.trim_end_matches('/') || url.ends_with("/Projects/voidlab/voidlab/repo") {
         return Some(Some(RepoPreset::Voidlab));
@@ -198,7 +190,6 @@ fn classify(url: &str, voidlab_repo: &str) -> Option<Option<RepoPreset>> {
     }
 }
 
-/// `foo-bar-1.2_3` -> `foo-bar`.
 pub fn pkgname(pkgver: &str) -> String {
     let pkgver = pkgver.trim();
     match pkgver.rsplit_once('-') {

@@ -12,7 +12,6 @@ use crate::profile::Profile;
 
 pub use script::generate_with;
 
-/// The standalone build script for a validated profile.
 pub fn generate(v: &ValidProfile) -> String {
     generate_with(v, &repos::voidlab_repo_path())
 }
@@ -31,7 +30,6 @@ fn owned<'a>(items: &'a [&'a str]) -> impl Iterator<Item = String> + 'a {
     items.iter().map(|s| s.to_string())
 }
 
-/// Every package the chosen axes need, in install order, without duplicates.
 pub fn required_packages(p: &Profile) -> Vec<String> {
     let mut out = vec![p.kernel.clone()];
     out.extend(owned(init::base_packages(p.init)));
@@ -47,14 +45,12 @@ pub fn required_packages(p: &Profile) -> Vec<String> {
     dedup(out)
 }
 
-/// What `xbps-install` is asked for: the required set plus the user's extras.
 pub fn install_packages(p: &Profile) -> Vec<String> {
     let mut out = required_packages(p);
     out.extend(p.packages.extra.iter().cloned());
     dedup(out)
 }
 
-/// Written as `ignorepkg=` so xbps never installs them, even as dependencies.
 pub fn ignored_packages(p: &Profile) -> Vec<String> {
     let mut out: Vec<String> = owned(init::ignore_packages(p.init)).collect();
     out.extend(p.packages.exclude.iter().cloned());

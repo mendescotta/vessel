@@ -1,5 +1,3 @@
-//! Profile open/save dialogs shared by the header bar and the Start page.
-
 use std::path::PathBuf;
 
 use adw::prelude::*;
@@ -18,7 +16,6 @@ fn toml_filter() -> gio::ListStore {
     filters
 }
 
-/// Asks for a profile file, loads it and replaces the current profile; runs `then` on success.
 pub fn open_profile(s: &Shared, parent: &impl IsA<gtk::Widget>, then: impl Fn() + 'static) {
     let dialog = gtk::FileDialog::builder().title("Open profile").filters(&toml_filter()).build();
     let window = parent.root().and_downcast::<gtk::Window>();
@@ -37,7 +34,6 @@ pub fn open_profile(s: &Shared, parent: &impl IsA<gtk::Widget>, then: impl Fn() 
     });
 }
 
-/// Saves to the last path, or asks for one (`save_as` always asks).
 pub fn save_profile(s: &Shared, parent: &impl IsA<gtk::Widget>, save_as: bool) {
     let existing = s.borrow().profile_path.clone();
     match existing {

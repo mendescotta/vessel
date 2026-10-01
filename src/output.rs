@@ -8,9 +8,6 @@ use crate::generate::script::{HOOK_PATH, OVERLAY_DIR};
 use crate::generate::{generate_with, repos};
 use crate::profile::validate::ValidProfile;
 
-/// Writes `profile.toml`, `build.sh`, the init's assets and copies of the overlay
-/// and hook into `dir`, replacing whatever an earlier save left there. `work/`
-/// and `out/` are never touched. Returns the path of `build.sh`.
 pub fn save_output(v: &ValidProfile, dir: &Path) -> io::Result<PathBuf> {
     save_output_with(v, dir, &repos::voidlab_repo_path())
 }
@@ -19,7 +16,6 @@ pub fn save_output_with(v: &ValidProfile, dir: &Path, voidlab_repo: &str) -> io:
     let p = v.get();
     fs::create_dir_all(dir)?;
     if let Some(src) = &p.overlay_dir {
-        // Copying a folder into a folder inside itself never ends.
         if let (Ok(src), Ok(out)) = (src.canonicalize(), dir.canonicalize()) {
             if out.starts_with(&src) {
                 return Err(io::Error::new(
@@ -30,7 +26,6 @@ pub fn save_output_with(v: &ValidProfile, dir: &Path, voidlab_repo: &str) -> io:
         }
     }
 
-    // Assets from any init: stale ones from an earlier save must not linger.
     remove_path(&dir.join("vmklive"))?;
     remove_path(&dir.join("dynamod-initramfs.sh"))?;
     for asset in assets_for(p.init) {
@@ -71,9 +66,6 @@ pub fn save_output_with(v: &ValidProfile, dir: &Path, voidlab_repo: &str) -> io:
     Ok(script)
 }
 
-/// Writes through a temp file and a rename, so a reader that already has the
-/// old file open (bash running build.sh reads it as it goes) keeps the old
-/// contents instead of seeing new bytes at old offsets.
 fn write_mode(path: &Path, contents: &str, mode: u32) -> io::Result<()> {
     let name = path.file_name().expect("output paths have a file name").to_string_lossy();
     let tmp = path.with_file_name(format!(".{name}.tmp"));
@@ -95,7 +87,6 @@ fn remove_path(path: &Path) -> io::Result<()> {
     }
 }
 
-/// Recursive copy preserving symlinks and permission bits.
 fn copy_dir(src: &Path, dest: &Path) -> io::Result<()> {
     fs::create_dir_all(dest)?;
     fs::set_permissions(dest, fs::metadata(src)?.permissions())?;

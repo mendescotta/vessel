@@ -15,8 +15,6 @@ pub enum BuildResult {
     Failed(i32),
 }
 
-/// Runs `command`, streaming stdout and stderr lines (interleaved as they
-/// arrive) and then the exit result.
 pub fn spawn_build<F>(command: &str, args: &[String], on_event: F) -> thread::JoinHandle<()>
 where
     F: Fn(BuildEvent) + Send + Sync + 'static,

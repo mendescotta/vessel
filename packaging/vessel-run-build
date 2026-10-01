@@ -1,6 +1,4 @@
 #!/bin/sh
-# pkexec target: runs a vessel-generated build.sh from its output folder.
-# Only folders vessel wrote (build.sh + profile.toml side by side) are accepted.
 set -eu
 
 [ "$#" -eq 1 ] || { echo "usage: vessel-run-build <output folder>" >&2; exit 2; }

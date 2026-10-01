@@ -1,8 +1,4 @@
 #!/bin/sh
-# Installs (or with --uninstall removes) the privileged pieces "Build now" needs:
-# the pkexec launcher and its polkit policy. The paths are fixed: the policy's
-# exec.path and vessel's LAUNCHER constant both name /usr/libexec/vessel/run-build.
-# DESTDIR stages into another root (packaging, tests).
 set -eu
 
 here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)

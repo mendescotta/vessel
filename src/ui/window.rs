@@ -23,7 +23,6 @@ pub fn build(app: &adw::Application) -> adw::ApplicationWindow {
     let back = gtk::Button::builder().label("Back").build();
     let next = gtk::Button::builder().label("Next").css_classes(["suggested-action"]).build();
 
-    // Keeps Back/Next in step with the visible page and the profile's validity.
     let refresh_nav: Rc<dyn Fn()> = {
         let (stack, index, back, next, s) = (stack.clone(), index.clone(), back.clone(), next.clone(), s.clone());
         Rc::new(move || {

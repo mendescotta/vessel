@@ -5,7 +5,6 @@ use super::{bootloader, dedup, enabled_services, ignored_packages, init, install
 use crate::profile::validate::{firmware_owners, ValidProfile};
 use crate::profile::{Bootloader, Init, Profile};
 
-/// Fixed names inside the output folder; `output::save_output` copies them there.
 pub const OVERLAY_DIR: &str = "overlay";
 pub const HOOK_PATH: &str = "hooks/post_rootfs.sh";
 
@@ -46,7 +45,6 @@ trap umount_chroot EXIT
 pub fn generate_with(v: &ValidProfile, voidlab_repo: &str) -> String {
     let p = v.get();
     let fw = firmware_owners(p);
-    // Bootloaders that own a firmware path, in list order, with their roles.
     let active: Vec<(Bootloader, bool, bool)> = p
         .bootloaders
         .iter()
@@ -229,7 +227,6 @@ cp -a /var/db/xbps/keys/. "$ROOTFS/var/db/xbps/keys/"
         }
         s.push_str("VESSEL_IGNORE\n");
     }
-    // dynamod-logind and elogind ship the same login1 D-Bus policy file.
     let force = if p.init == Init::Dynamod { " -I" } else { "" };
     let _ = writeln!(s, "info \"Installing {} packages into $ROOTFS\"", install_packages(p).len());
     let _ = writeln!(

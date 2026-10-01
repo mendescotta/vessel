@@ -155,7 +155,6 @@ impl Profile {
         toml::to_string_pretty(self).expect("profile always serialises")
     }
 
-    /// Loads a profile file; relative overlay/hook paths resolve against its directory.
     pub fn load(path: &Path) -> Result<Self, ProfileError> {
         let text = std::fs::read_to_string(path).map_err(ProfileError::Io)?;
         let mut profile = Self::from_toml(&text)?;

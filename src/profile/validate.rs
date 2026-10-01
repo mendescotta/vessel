@@ -15,8 +15,6 @@ pub struct Issue {
     pub message: String,
 }
 
-/// A profile that passed `validate` with no errors. Only `validate` builds one,
-/// which is what lets `generate` be infallible.
 #[derive(Debug, Clone)]
 pub struct ValidProfile(Profile);
 
@@ -31,21 +29,18 @@ pub fn assume_valid(p: Profile) -> ValidProfile {
     ValidProfile(p)
 }
 
-/// Which bootloader boots the ISO on each firmware path.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Firmware {
     pub bios: Option<Bootloader>,
     pub uefi: Option<Bootloader>,
 }
 
-/// The first bootloader in list order providing a path owns it.
 pub fn firmware_owners(p: &Profile) -> Firmware {
     let bios = if p.uefi_only { None } else { p.bootloaders.iter().copied().find(|b| b.bios()) };
     let uefi = p.bootloaders.iter().copied().find(|b| b.uefi());
     Firmware { bios, uefi }
 }
 
-/// Repo presets the chosen init/userland packages come from.
 pub fn required_presets(p: &Profile) -> Vec<RepoPreset> {
     let mut out = Vec::new();
     let mut need = |r| {
@@ -81,7 +76,6 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
         error("kernel", format!("kernel package {:?} can't start with '-'", p.kernel));
     }
 
-    // Bootloaders and firmware coverage.
     if p.bootloaders.is_empty() {
         error("bootloaders", "choose at least one bootloader".into());
     }
@@ -104,7 +98,6 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
         }
     }
 
-    // Repositories.
     for preset in required_presets(p) {
         if !p.repos.presets.contains(&preset) {
             let who = if preset == RepoPreset::Noid || p.init != Init::Runit {
@@ -123,7 +116,6 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
         }
     }
 
-    // Desktops and display manager.
     let dm = p.display_manager;
     if dm != DisplayManager::None && p.desktops.is_empty() {
         error("display_manager", format!("{} needs at least one desktop", dm.label()));
@@ -135,7 +127,6 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
         error("display_manager", "COSMIC Greeter requires the COSMIC desktop".into());
     }
 
-    // Packages and services.
     for (field, list) in [
         ("packages", &p.packages.extra),
         ("packages", &p.packages.exclude),
@@ -157,7 +148,6 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
         }
     }
 
-    // Live identity.
     if !valid_hostname(&p.live.hostname) {
         error("live", format!("hostname {:?} must be 1-63 letters, digits or '-', not starting or ending with '-'", p.live.hostname));
     }
@@ -170,7 +160,6 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
         }
     }
 
-    // Files.
     if let Some(dir) = &p.overlay_dir {
         if !dir.is_dir() {
             error("overlay_dir", format!("overlay folder {} does not exist", dir.display()));
@@ -182,7 +171,6 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
         }
     }
 
-    // Warnings.
     let mut warn = |field, message: String| issues.push(Issue { severity: Severity::Warning, field, message });
     for b in &p.bootloaders {
         if Some(*b) != fw.bios && Some(*b) != fw.uefi {
@@ -202,8 +190,6 @@ fn is_token(s: &str) -> bool {
     !s.is_empty() && !s.chars().any(char::is_whitespace)
 }
 
-/// Values passed as command arguments (xbps-install, ln, -R) would be read
-/// as options if they started with '-'.
 fn is_option(s: &str) -> bool {
     s.starts_with('-')
 }

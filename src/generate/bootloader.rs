@@ -1,6 +1,5 @@
 use crate::profile::Bootloader;
 
-/// Host commands a bootloader needs for the roles it owns, with the Void package providing each.
 pub fn host_tools(b: Bootloader, bios: bool, uefi: bool) -> Vec<(&'static str, &'static str)> {
     let mut t = Vec::new();
     match b {
@@ -22,7 +21,6 @@ pub fn host_tools(b: Bootloader, bios: bool, uefi: bool) -> Vec<(&'static str, &
     t
 }
 
-/// Host files (not commands) the stage copies, with the package providing each.
 pub fn host_files(b: Bootloader, bios: bool, uefi: bool) -> Vec<(&'static str, &'static str)> {
     let mut f = Vec::new();
     match b {
@@ -38,8 +36,6 @@ pub fn host_files(b: Bootloader, bios: bool, uefi: bool) -> Vec<(&'static str, &
     f
 }
 
-/// Bash that stages this bootloader's files and config into `$ISODIR` for the roles it owns.
-/// Uses `$MENU_TITLE`, `$LABEL`, `$CMDLINE`, `$CMDLINE_RAM` (may be empty) and `$WORK`.
 pub fn stage(b: Bootloader, bios: bool, uefi: bool) -> String {
     let mut s = String::new();
     match b {
@@ -134,8 +130,6 @@ const LIMINE_CONF: &str = r#"{
 } > "$ISODIR/boot/limine/limine.conf"
 "#;
 
-// UEFI only. The El Torito image carries the kernel and initrd too, so rEFInd
-// needs no ISO9660 driver to find them.
 const REFIND_UEFI: &str = r#"info "rEFInd (UEFI)"
 rm -rf "$WORK/efi-refind"
 mkdir -p "$WORK/efi-refind/EFI/BOOT" "$WORK/efi-refind/boot" "$ISODIR/boot/refind"
@@ -153,7 +147,6 @@ cp "$ISODIR/boot/vmlinuz" "$ISODIR/boot/initrd" "$WORK/efi-refind/boot/"
 make_efi_image "$ISODIR/boot/refind/efiboot.img" "$WORK/efi-refind"
 "#;
 
-/// El Torito arguments when this bootloader owns BIOS boot.
 pub fn xorriso_bios_args(b: Bootloader) -> &'static str {
     match b {
         Bootloader::Grub => {
@@ -165,8 +158,6 @@ pub fn xorriso_bios_args(b: Bootloader) -> &'static str {
     }
 }
 
-/// El Torito image when this bootloader owns UEFI boot. The caller adds
-/// `-no-emul-boot -isohybrid-gpt-basdat` and, after a BIOS entry, `-eltorito-alt-boot`.
 pub fn xorriso_uefi_args(b: Bootloader) -> &'static str {
     match b {
         Bootloader::Grub => "-e boot/grub/efiboot.img",
@@ -175,7 +166,6 @@ pub fn xorriso_uefi_args(b: Bootloader) -> &'static str {
     }
 }
 
-/// Runs on the finished `$ISO`.
 pub fn post_iso(b: Bootloader, bios: bool) -> &'static str {
     match b {
         Bootloader::Limine if bios => "limine bios-install \"$ISO\"\n",
@@ -183,7 +173,6 @@ pub fn post_iso(b: Bootloader, bios: bool) -> &'static str {
     }
 }
 
-/// Bash helper that packs a staging dir into a FAT image without loop devices.
 pub const EFI_IMAGE_FN: &str = r#"make_efi_image() { # <image> <staging dir>
 	local img="$1" dir="$2" size_kb
 	size_kb=$(( $(du -sk "$dir" | cut -f1) * 11 / 10 + 2048 ))

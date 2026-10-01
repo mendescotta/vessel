@@ -5,12 +5,10 @@ pub fn base_packages(i: Init) -> &'static [&'static str] {
         Init::Runit => &["base-system"],
         Init::DinitChimera => &["base-system-dinit", "dinit-chimera", "dinit-void"],
         Init::DinitNoid => &["noid-base-system"],
-        // kmod/util-linux/zstd/binutils feed dynamod-initramfs.sh (modprobe -D, blkid, .ko.zst).
         Init::Dynamod => &["base-system", "dynamod", "zstd", "kmod", "util-linux"],
     }
 }
 
-/// Packages xbps must never install for this init.
 pub fn ignore_packages(i: Init) -> &'static [&'static str] {
     match i {
         Init::Dynamod => &["runit-void"],
@@ -22,7 +20,6 @@ pub fn uses_dracut(i: Init) -> bool {
     !matches!(i, Init::Dynamod)
 }
 
-/// Needed in the rootfs to build the live initramfs (as void-mklive installs them).
 pub fn initramfs_packages(i: Init) -> &'static [&'static str] {
     if uses_dracut(i) {
         &["dracut", "binutils", "xz", "device-mapper", "dhclient", "dracut-network", "openresolv"]
@@ -33,14 +30,11 @@ pub fn initramfs_packages(i: Init) -> &'static [&'static str] {
 
 pub fn default_services(i: Init) -> &'static [&'static str] {
     match i {
-        // dhcpcd ships with base-system; a live image should come up online.
         Init::Runit | Init::DinitChimera | Init::DinitNoid => &["agetty-tty1", "agetty-tty2", "dhcpcd"],
-        // dynamod ships its own enabled set in /etc/dynamod/services.
         Init::Dynamod => &[],
     }
 }
 
-/// Kernel command line for the live boot.
 pub fn cmdline(p: &crate::profile::Profile, label: &str) -> String {
     let l = &p.live;
     match p.init {
@@ -55,7 +49,6 @@ pub fn cmdline(p: &crate::profile::Profile, label: &str) -> String {
                  vconsole.keymap={} locale.LANG={} live.user={}",
                 l.keymap, l.locale, l.user
             );
-            // The vendored vmklive module is noid-mklive's; it branches on this.
             if matches!(p.init, Init::DinitChimera | Init::DinitNoid) {
                 c.push_str(" noid.init_system=dinit");
             }
@@ -64,8 +57,6 @@ pub fn cmdline(p: &crate::profile::Profile, label: &str) -> String {
     }
 }
 
-/// Bash definitions of `enable_service` / `disable_service` for this init's layout.
-/// Missing services warn instead of failing the build.
 pub fn service_functions(i: Init) -> &'static str {
     match i {
         Init::Runit => r#"enable_service() {
@@ -112,7 +103,6 @@ disable_service() {
     }
 }
 
-/// Builds `$ISODIR/boot/initrd` from the rootfs for kernel `$KVER`.
 pub fn initramfs_stage(i: Init) -> &'static str {
     if uses_dracut(i) {
         r#"info "Building live initramfs (dracut + vmklive)"
@@ -131,11 +121,8 @@ bash "$HERE/dynamod-initramfs.sh" "$ROOTFS" "$KVER" "$ISODIR/boot/initrd"
     }
 }
 
-/// Packs the rootfs where this init's live boot looks for it.
 pub fn squashfs_stage(i: Init) -> &'static str {
     if uses_dracut(i) {
-        // dmsquash-live wants LiveOS/rootfs.img inside the squashfs (as void-mklive does).
-        // mkfs.ext3 -d fills the image without a loop mount.
         r#"info "Packing rootfs (dmsquash-live layout)"
 rm -rf "$WORK/squash"
 mkdir -p "$WORK/squash/LiveOS" "$ISODIR/LiveOS"
@@ -153,9 +140,6 @@ mksquashfs "$ROOTFS" "$ISODIR/live/root.squashfs" -comp xz -noappend
     }
 }
 
-/// dynamod-only rootfs setup, ported from void-dynamod-iso's build-rootfs.sh:
-/// its mimic daemons need a permissive system bus policy, and there is no
-/// vmklive to create the live user at boot.
 pub fn dynamod_rootfs_extra() -> &'static str {
     r#"info "dynamod: permissive D-Bus system policy (Void's default blocks the mimic daemons)"
 mkdir -p "$ROOTFS/etc/dbus-1"

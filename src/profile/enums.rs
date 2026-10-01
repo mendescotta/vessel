@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-/// Defines a kebab-case serde enum plus `ALL`, `id()` and `label()`.
 macro_rules! axis {
     ($(#[$m:meta])* $name:ident { $($variant:ident => $id:literal, $label:literal;)+ }) => {
         $(#[$m])*
@@ -66,7 +65,6 @@ axis!(RepoPreset {
 });
 
 impl Bootloader {
-    /// Can boot the ISO from legacy BIOS firmware.
     pub fn bios(self) -> bool {
         match self {
             Self::Grub | Self::Limine => true,
@@ -74,7 +72,6 @@ impl Bootloader {
         }
     }
 
-    /// Can boot the ISO from UEFI firmware.
     pub fn uefi(self) -> bool {
         true
     }

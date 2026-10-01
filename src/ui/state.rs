@@ -5,8 +5,6 @@ use std::rc::Rc;
 use crate::profile::validate::{validate, Issue, ValidProfile};
 use crate::profile::Profile;
 
-/// Why listeners are being told: an edit made through a widget, or a whole new
-/// profile (open / new / snapshot) that every widget must reload from.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Change {
     Edit,
@@ -19,7 +17,6 @@ pub struct AppState {
     pub profile: Profile,
     pub issues: Vec<Issue>,
     pub valid: Option<ValidProfile>,
-    /// Where the profile was last opened from or saved to.
     pub profile_path: Option<PathBuf>,
     listeners: Vec<Listener>,
 }
@@ -35,7 +32,6 @@ pub fn on_change(s: &Shared, f: impl Fn(&Profile, &[Issue], Change) + 'static) {
     s.borrow_mut().listeners.push(Rc::new(f));
 }
 
-/// Applies an edit, re-validates, and notifies listeners if anything changed.
 pub fn update(s: &Shared, f: impl FnOnce(&mut Profile)) {
     let mut next = s.borrow().profile.clone();
     f(&mut next);
@@ -58,7 +54,6 @@ fn set(s: &Shared, profile: Profile, change: Change) {
         st.valid = valid;
         st.listeners.clone()
     };
-    // Borrow released: listeners may read or update the state themselves.
     for l in listeners {
         l(&profile, &issues, change);
     }

@@ -55,7 +55,6 @@ pub fn build(s: &Shared) -> gtk::Widget {
     log_group.add(&scroller);
     page.add(&log_group);
 
-    // Saved folder that "Build now" will run; cleared when the profile changes after saving.
     let saved: Rc<RefCell<Option<PathBuf>>> = Rc::default();
 
     {
@@ -126,14 +125,12 @@ pub fn build(s: &Shared) -> gtk::Widget {
                         BuildEvent::Finished(result) => {
                             status.set_text(&match result {
                                 BuildResult::Success => format!("Build finished. The ISO is in {}", dir.join("out").display()),
-                                // pkexec: 126 = authorization refused, 127 = dismissed / helper missing.
                                 BuildResult::Failed(126 | 127) => format!(
                                     "Not authorized, or {LAUNCHER} isn't installed. You can run it yourself: cd {} && sudo ./build.sh",
                                     dir.display()
                                 ),
                                 BuildResult::Failed(code) => format!("Build failed (exit {code}); see the log."),
                             });
-                            // Editing the profile during the build clears `saved`: it has to be saved again first.
                             run.set_sensitive(saved.borrow().is_some());
                             break;
                         }

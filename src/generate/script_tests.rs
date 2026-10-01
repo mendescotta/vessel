@@ -149,7 +149,6 @@ fn refind_uefi_grub_bios_has_both_eltorito_entries() {
     let alt = x.find("-eltorito-alt-boot").unwrap();
     let uefi = x.find("-e boot/refind/efiboot.img").unwrap();
     assert!(bios < alt && alt < uefi);
-    // rEFInd copies the kernel into its image, so it must run after the kernel is staged.
     assert!(s.find("rEFInd (UEFI)").unwrap() > s.find("\"$ISODIR/boot/vmlinuz\"").unwrap());
 }
 
@@ -208,8 +207,6 @@ fn work_guard_rejects_root_at_runtime() {
     assert_eq!(code, Some(7));
 }
 
-/// The generated text from the line starting with `from` up to (not including)
-/// the line starting with `to`.
 fn between<'a>(s: &'a str, from: &str, to: &str) -> &'a str {
     let start = s.find(from).unwrap_or_else(|| panic!("no {from:?}"));
     let end = start + s[start..].find(to).unwrap_or_else(|| panic!("no {to:?}"));

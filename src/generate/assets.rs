@@ -1,6 +1,5 @@
 use crate::profile::Init;
 
-/// A file written next to `build.sh`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Asset {
     pub path: &'static str,
@@ -14,8 +13,6 @@ macro_rules! asset {
     };
 }
 
-/// void-mklive's live-boot dracut module, taken from noid-mklive (which adds
-/// dinit support via `noid.init_system=`). BSD-2-Clause, see vmklive/COPYING.
 const VMKLIVE: &[Asset] = &[
     asset!("vmklive/59-mtd.rules", false),
     asset!("vmklive/61-mtd.rules", false),

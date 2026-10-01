@@ -34,7 +34,6 @@ pub fn build(s: &Shared) -> gtk::Widget {
         }
     };
     render();
-    // Regenerating on every keystroke is cheap (pure string building).
     state::on_change(s, move |_, _, _| render());
     page.upcast()
 }
