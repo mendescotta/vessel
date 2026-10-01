@@ -77,6 +77,8 @@ sudo ./build.sh            # ISO lands in out/<name>-<YYYYMMDD>.iso
 ```
 
 `WORK` and `OUT` override the scratch (`work/`) and output (`out/`) folders.
+The script only wipes a scratch folder it created itself (it leaves a
+`.vessel-work` marker), so a non-empty `WORK` without the marker is refused.
 The script checks for its host tools first and names the package for each
 missing one (xbps, dracut, squashfs-tools, xorriso, grub/limine/refind,
 mtools, dosfstools, e2fsprogs).

@@ -112,7 +112,7 @@ pub fn build(s: &Shared) -> gtk::Widget {
             spawn_build("pkexec", &[LAUNCHER.to_string(), dir.to_string_lossy().into_owned()], move |event| {
                 let _ = tx.send_blocking(event);
             });
-            let (status, log, run) = (status.clone(), log.clone(), run.clone());
+            let (status, log, run, saved) = (status.clone(), log.clone(), run.clone(), saved.clone());
             glib::spawn_future_local(async move {
                 while let Ok(event) = rx.recv().await {
                     match event {
@@ -133,7 +133,8 @@ pub fn build(s: &Shared) -> gtk::Widget {
                                 ),
                                 BuildResult::Failed(code) => format!("Build failed (exit {code}); see the log."),
                             });
-                            run.set_sensitive(true);
+                            // Editing the profile during the build clears `saved`: it has to be saved again first.
+                            run.set_sensitive(saved.borrow().is_some());
                             break;
                         }
                     }

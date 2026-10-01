@@ -18,6 +18,17 @@ pub fn save_output(v: &ValidProfile, dir: &Path) -> io::Result<PathBuf> {
 pub fn save_output_with(v: &ValidProfile, dir: &Path, voidlab_repo: &str) -> io::Result<PathBuf> {
     let p = v.get();
     fs::create_dir_all(dir)?;
+    if let Some(src) = &p.overlay_dir {
+        // Copying a folder into a folder inside itself never ends.
+        if let (Ok(src), Ok(out)) = (src.canonicalize(), dir.canonicalize()) {
+            if out.starts_with(&src) {
+                return Err(io::Error::new(
+                    io::ErrorKind::InvalidInput,
+                    format!("the overlay folder {} contains the output folder; pick an output folder outside it", src.display()),
+                ));
+            }
+        }
+    }
 
     // Assets from any init: stale ones from an earlier save must not linger.
     remove_path(&dir.join("vmklive"))?;

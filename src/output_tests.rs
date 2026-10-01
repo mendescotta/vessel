@@ -118,3 +118,15 @@ fn resave_does_not_change_a_script_that_is_running() {
     assert!(std::fs::read_to_string(&script).unwrap().contains("renamed-while-building"));
     assert_eq!(mode(&script), 0o755);
 }
+
+#[test]
+fn overlay_containing_the_output_folder_is_refused() {
+    let src = tmp("overlay-parent");
+    std::fs::write(src.join("motd"), "hi").unwrap();
+    let dir = src.join("out");
+    let mut p = Profile::new_default();
+    p.overlay_dir = Some(src.clone());
+    let err = save_output_with(&valid(&p), &dir, "/vl").unwrap_err();
+    assert_eq!(err.kind(), std::io::ErrorKind::InvalidInput, "{err}");
+    assert!(!dir.join("overlay").exists());
+}
