@@ -175,3 +175,22 @@ fn list_entries_must_be_single_tokens() {
     p.kernel = "linux lts".into();
     assert!(has_error(&p, "kernel"));
 }
+
+#[test]
+fn names_starting_with_dash_are_rejected_as_option_injection() {
+    let mut p = Profile::new_default();
+    p.packages.extra = vec!["--rootdir=/".into()];
+    assert!(has_error(&p, "packages"));
+    let mut p = Profile::new_default();
+    p.packages.exclude = vec!["-x".into()];
+    assert!(has_error(&p, "packages"));
+    let mut p = Profile::new_default();
+    p.services.enable = vec!["-rf".into()];
+    assert!(has_error(&p, "services"));
+    let mut p = Profile::new_default();
+    p.kernel = "-r/".into();
+    assert!(has_error(&p, "kernel"));
+    let mut p = Profile::new_default();
+    p.repos.custom = vec!["-C/etc".into()];
+    assert!(has_error(&p, "repos"));
+}

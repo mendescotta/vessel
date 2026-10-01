@@ -165,7 +165,10 @@ pub fn toggle_in<T: PartialEq>(list: &mut Vec<T>, item: T, on: bool) {
 /// A scrolling preferences page with a title/description header group.
 pub fn page(title: &str, description: &str) -> adw::PreferencesPage {
     let page = adw::PreferencesPage::new();
-    let header = adw::PreferencesGroup::builder().title(title).description(description).build();
+    let header = adw::PreferencesGroup::builder()
+        .title(glib::markup_escape_text(title))
+        .description(glib::markup_escape_text(description))
+        .build();
     page.add(&header);
     page
 }
