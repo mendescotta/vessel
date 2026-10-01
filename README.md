@@ -84,9 +84,12 @@ missing one (xbps, dracut, squashfs-tools, xorriso, grub/limine/refind,
 mtools, dosfstools, e2fsprogs).
 
 "Build now" in the app runs the same thing through
-`pkexec /usr/libexec/vessel/run-build <folder>`. Install
-`packaging/vessel-run-build` there and `packaging/org.voidlinux.vessel.policy`
-into `/usr/share/polkit-1/actions/`.
+`pkexec /usr/libexec/vessel/run-build <folder>`. Install that launcher and
+its polkit policy once:
+
+```
+sudo ./packaging/install.sh                # or --uninstall
+```
 
 ## Building vessel
 
