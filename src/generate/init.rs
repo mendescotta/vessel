@@ -33,7 +33,8 @@ pub fn initramfs_packages(i: Init) -> &'static [&'static str] {
 
 pub fn default_services(i: Init) -> &'static [&'static str] {
     match i {
-        Init::Runit | Init::DinitChimera | Init::DinitNoid => &["agetty-tty1", "agetty-tty2"],
+        // dhcpcd ships with base-system; a live image should come up online.
+        Init::Runit | Init::DinitChimera | Init::DinitNoid => &["agetty-tty1", "agetty-tty2", "dhcpcd"],
         // dynamod ships its own enabled set in /etc/dynamod/services.
         Init::Dynamod => &[],
     }
@@ -50,7 +51,7 @@ pub fn cmdline(p: &crate::profile::Profile, label: &str) -> String {
         Init::Runit | Init::DinitChimera | Init::DinitNoid => {
             let mut c = format!(
                 "root=live:CDLABEL={label} ro init=/sbin/init rd.luks=0 rd.md=0 rd.dm=0 \
-                 rd.live.overlay.overlayfs=1 loglevel=4 vconsole.unicode=1 \
+                 rd.overlay=1 loglevel=4 vconsole.unicode=1 \
                  vconsole.keymap={} locale.LANG={} live.user={}",
                 l.keymap, l.locale, l.user
             );

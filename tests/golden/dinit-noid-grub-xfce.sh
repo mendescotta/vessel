@@ -142,6 +142,7 @@ disable_service() {
 }
 enable_service 'agetty-tty1'
 enable_service 'agetty-tty2'
+enable_service 'dhcpcd'
 enable_service 'dbus'
 enable_service 'elogind'
 enable_service 'NetworkManager'
@@ -174,8 +175,8 @@ mksquashfs "$WORK/squash" "$ISODIR/LiveOS/squashfs.img" -comp zstd -noappend
 rm -rf "$WORK/squash"
 
 # --- 7. bootloaders: grub (BIOS+UEFI) ---
-CMDLINE='root=live:CDLABEL=NOID_XFCE ro init=/sbin/init rd.luks=0 rd.md=0 rd.dm=0 rd.live.overlay.overlayfs=1 loglevel=4 vconsole.unicode=1 vconsole.keymap=us locale.LANG=en_US.UTF-8 live.user=anon noid.init_system=dinit'
-CMDLINE_RAM='root=live:CDLABEL=NOID_XFCE ro init=/sbin/init rd.luks=0 rd.md=0 rd.dm=0 rd.live.overlay.overlayfs=1 loglevel=4 vconsole.unicode=1 vconsole.keymap=us locale.LANG=en_US.UTF-8 live.user=anon noid.init_system=dinit rd.live.ram'
+CMDLINE='root=live:CDLABEL=NOID_XFCE ro init=/sbin/init rd.luks=0 rd.md=0 rd.dm=0 rd.overlay=1 loglevel=4 vconsole.unicode=1 vconsole.keymap=us locale.LANG=en_US.UTF-8 live.user=anon noid.init_system=dinit'
+CMDLINE_RAM='root=live:CDLABEL=NOID_XFCE ro init=/sbin/init rd.luks=0 rd.md=0 rd.dm=0 rd.overlay=1 loglevel=4 vconsole.unicode=1 vconsole.keymap=us locale.LANG=en_US.UTF-8 live.user=anon noid.init_system=dinit rd.live.ram'
 info "GRUB (BIOS + UEFI)"
 mkdir -p "$ISODIR/boot/grub"
 {

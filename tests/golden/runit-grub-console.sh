@@ -136,6 +136,7 @@ disable_service() {
 }
 enable_service 'agetty-tty1'
 enable_service 'agetty-tty2'
+enable_service 'dhcpcd'
 
 # --- 5. kernel + initramfs: dracut + vmklive ---
 KVER="$(ls "$ROOTFS/usr/lib/modules" | sort -V | tail -1)"
@@ -163,8 +164,8 @@ mksquashfs "$WORK/squash" "$ISODIR/LiveOS/squashfs.img" -comp zstd -noappend
 rm -rf "$WORK/squash"
 
 # --- 7. bootloaders: grub (BIOS+UEFI) ---
-CMDLINE='root=live:CDLABEL=VOID_LIVE ro init=/sbin/init rd.luks=0 rd.md=0 rd.dm=0 rd.live.overlay.overlayfs=1 loglevel=4 vconsole.unicode=1 vconsole.keymap=us locale.LANG=en_US.UTF-8 live.user=anon'
-CMDLINE_RAM='root=live:CDLABEL=VOID_LIVE ro init=/sbin/init rd.luks=0 rd.md=0 rd.dm=0 rd.live.overlay.overlayfs=1 loglevel=4 vconsole.unicode=1 vconsole.keymap=us locale.LANG=en_US.UTF-8 live.user=anon rd.live.ram'
+CMDLINE='root=live:CDLABEL=VOID_LIVE ro init=/sbin/init rd.luks=0 rd.md=0 rd.dm=0 rd.overlay=1 loglevel=4 vconsole.unicode=1 vconsole.keymap=us locale.LANG=en_US.UTF-8 live.user=anon'
+CMDLINE_RAM='root=live:CDLABEL=VOID_LIVE ro init=/sbin/init rd.luks=0 rd.md=0 rd.dm=0 rd.overlay=1 loglevel=4 vconsole.unicode=1 vconsole.keymap=us locale.LANG=en_US.UTF-8 live.user=anon rd.live.ram'
 info "GRUB (BIOS + UEFI)"
 mkdir -p "$ISODIR/boot/grub"
 {

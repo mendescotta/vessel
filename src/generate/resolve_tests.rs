@@ -118,3 +118,21 @@ fn validate_rejects_excluding_required_package() {
     assert!(valid.is_none());
     assert!(issues.iter().any(|i| i.field == "packages" && i.message.contains("base-system")));
 }
+
+#[test]
+fn live_images_get_networking() {
+    for init in [Init::Runit, Init::DinitChimera, Init::DinitNoid] {
+        assert!(init::default_services(init).contains(&"dhcpcd"), "{init:?}");
+    }
+}
+
+#[test]
+fn live_cmdline_uses_current_overlay_option() {
+    for init in [Init::Runit, Init::DinitChimera, Init::DinitNoid] {
+        let mut p = Profile::new_default();
+        p.init = init;
+        let c = init::cmdline(&p, "L");
+        assert!(c.contains(" rd.overlay=1 "), "{c}");
+        assert!(!c.contains("rd.live.overlay"), "{c}");
+    }
+}
