@@ -1,0 +1,31 @@
+# Console live ISO on dynamod, Limine (BIOS + UEFI). dynamod already enables
+# agetty-tty*, sshd and dbus from /etc/dynamod/services.
+version = 1
+name = "dynamod-base"
+arch = "x86_64"
+init = "dynamod"
+userland = "gnu"
+bootloaders = ["limine"]
+uefi_only = false
+desktops = []
+display_manager = "none"
+kernel = "linux"
+
+[repos]
+presets = ["voidlab"]
+custom = []
+
+[packages]
+extra = []
+exclude = []
+
+[services]
+enable = []
+disable = []
+
+[live]
+hostname = "void-live"
+locale = "en_US.UTF-8"
+keymap = "us"
+timezone = "UTC"
+user = "anon"

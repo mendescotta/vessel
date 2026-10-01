@@ -1,0 +1,30 @@
+# Console live ISO on dinit-chimera with chimerautils, GRUB (BIOS + UEFI).
+version = 1
+name = "dinit-chimera-base"
+arch = "x86_64"
+init = "dinit-chimera"
+userland = "chimerautils"
+bootloaders = ["grub"]
+uefi_only = false
+desktops = []
+display_manager = "none"
+kernel = "linux"
+
+[repos]
+presets = ["voidlab"]
+custom = []
+
+[packages]
+extra = []
+exclude = []
+
+[services]
+enable = []
+disable = []
+
+[live]
+hostname = "void-live"
+locale = "en_US.UTF-8"
+keymap = "us"
+timezone = "UTC"
+user = "anon"

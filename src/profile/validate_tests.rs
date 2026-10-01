@@ -194,3 +194,15 @@ fn names_starting_with_dash_are_rejected_as_option_injection() {
     p.repos.custom = vec!["-C/etc".into()];
     assert!(has_error(&p, "repos"));
 }
+
+#[test]
+fn examples_validate() {
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("examples");
+    for name in ["dinit-chimera-base.toml", "dynamod-base.toml"] {
+        let p = Profile::load(&dir.join(name)).unwrap_or_else(|e| panic!("{name}: {e}"));
+        let (issues, valid) = validate(&p);
+        let errors: Vec<_> = issues.iter().filter(|i| i.severity == Severity::Error).collect();
+        assert!(errors.is_empty(), "{name}: {errors:?}");
+        assert!(valid.is_some(), "{name}");
+    }
+}
