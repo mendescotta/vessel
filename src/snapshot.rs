@@ -66,16 +66,8 @@ pub fn snapshot_with(host: &dyn HostProbe, voidlab_repo: &str) -> (Profile, Vec<
         }
     }
 
-    let enabled: Vec<String> = if host.exists("/etc/dynamod") {
-        p.init = Init::Dynamod;
-        host.list("/etc/dynamod/services")
-            .unwrap_or_default()
-            .into_iter()
-            .filter_map(|f| f.strip_suffix(".toml").map(String::from))
-            .filter(|s| !s.starts_with("dynamod-"))
-            .collect()
-    } else if host.exists("/etc/dinit.d/boot.d") {
-        p.init = if has("noid-base-system") { Init::DinitNoid } else { Init::DinitChimera };
+    let enabled: Vec<String> = if host.exists("/etc/dinit.d/boot.d") {
+        p.init = Init::Dinit;
         host.list("/etc/dinit.d/boot.d").unwrap_or_default()
     } else {
         p.init = Init::Runit;
@@ -175,9 +167,6 @@ fn read_repos(host: &dyn HostProbe, voidlab_repo: &str, p: &mut Profile, warning
 fn classify(url: &str, voidlab_repo: &str) -> Option<Option<RepoPreset>> {
     if url == voidlab_repo.trim_end_matches('/') || url.ends_with("/Projects/voidlab/voidlab/repo") {
         return Some(Some(RepoPreset::Voidlab));
-    }
-    if url == repos::NOID {
-        return Some(Some(RepoPreset::Noid));
     }
     if url.ends_with("/current") {
         Some(None)

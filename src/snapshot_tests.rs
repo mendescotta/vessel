@@ -65,7 +65,7 @@ fn seeds_dinit_chimera_gnome_host() {
     assert!(warnings.is_empty(), "{warnings:?}");
     assert_eq!(p.name, "mybox-snapshot");
     assert_eq!(p.live.hostname, "mybox");
-    assert_eq!(p.init, Init::DinitChimera);
+    assert_eq!(p.init, Init::Dinit);
     assert_eq!(p.userland, Userland::Chimerautils);
     assert_eq!(p.desktops, vec![Desktop::Gnome]);
     assert_eq!(p.display_manager, DisplayManager::Lightdm);
@@ -90,29 +90,12 @@ fn etc_overrides_same_named_usr_share_conf() {
 }
 
 #[test]
-fn detects_runit_and_dynamod() {
+fn detects_runit() {
     let runit = FakeHost::default().dir("/var/service", &["sddm", "agetty-tty1"]).cmd("xbps-query -l", "ii kde-plasma-6.0_1 x\n");
     let (p, _) = snapshot_with(&runit, "/vl");
     assert_eq!(p.init, Init::Runit);
     assert_eq!(p.desktops, vec![Desktop::Kde]);
     assert_eq!(p.display_manager, DisplayManager::Sddm);
-
-    let dynamod = FakeHost::default().dir("/etc/dynamod", &["services"]).dir("/etc/dynamod/services", &["dynamod-logind.toml", "sshd.toml"]);
-    let (p, _) = snapshot_with(&dynamod, "/vl");
-    assert_eq!(p.init, Init::Dynamod);
-    assert!(p.repos.presets.contains(&RepoPreset::Voidlab), "required preset auto-added");
-    assert!(p.services.enable.contains(&"sshd".to_string()));
-    assert_eq!(p.bootloaders, vec![Bootloader::Limine]);
-}
-
-#[test]
-fn noid_detected_by_base_package() {
-    let host = FakeHost::default()
-        .dir("/etc/dinit.d/boot.d", &[])
-        .cmd("xbps-query -l", "ii noid-base-system-1_1 x\n");
-    let (p, _) = snapshot_with(&host, "/vl");
-    assert_eq!(p.init, Init::DinitNoid);
-    assert!(p.repos.presets.contains(&RepoPreset::Noid));
 }
 
 #[test]

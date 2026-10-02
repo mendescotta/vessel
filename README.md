@@ -13,12 +13,12 @@ Profiles can be built from scratch, or seeded from the running system
 
 | Field | Values |
 |---|---|
-| `init` | `runit`, `dinit-chimera`, `dinit-noid`, `dynamod` |
-| `userland` | `gnu`, `chimerautils` |
+| `init` | `runit`, `dinit` (older `dinit-chimera` / `dinit-noid` still load) |
+| `userland` | `gnu`, `chimerautils` (shown as "bsdutils" in the UI) |
 | `bootloaders` | any of `grub`, `limine`, `refind` (refind is UEFI only) |
 | `desktops` | any of `gnome`, `cosmic`, `cinnamon`, `xfce`, `budgie`, `kde`; empty = console |
 | `display_manager` | `none`, `lightdm`, `sddm`, `gdm`, `cosmic-greeter` |
-| `repos.presets` | `voidlab`, `nonfree`, `multilib`, `noid` |
+| `repos.presets` | `voidlab`, `nonfree`, `multilib` (an old `noid` entry is ignored) |
 
 Some bootloader must cover UEFI, and BIOS too unless `uefi_only = true`.
 Validation runs on every edit; the Review page lists errors and warnings and
@@ -28,9 +28,9 @@ previews the generated script.
 
 ```toml
 version = 1
-name = "dinit-chimera-base"
+name = "dinit-base"
 arch = "x86_64"
-init = "dinit-chimera"
+init = "dinit"
 userland = "chimerautils"
 bootloaders = ["grub"]
 desktops = []
@@ -65,7 +65,7 @@ Save writes to `~/vessel/<name>` (or a folder you pick):
 - `profile.toml`: the profile, reloadable in vessel
 - `build.sh`: the generated script
 - `vmklive/`: the dracut live module (vendored from noid-mklive; license in `vmklive/COPYING`)
-- `dynamod-initramfs.sh`, overlay and hook, when the profile uses them
+- overlay and hook, when the profile uses them
 
 Saving again over the same folder replaces these files cleanly.
 

@@ -1,8 +1,8 @@
-# Console live ISO on dinit-chimera with chimerautils, GRUB (BIOS + UEFI).
+# Console live ISO on dinit with bsdutils, GRUB (BIOS + UEFI).
 version = 1
-name = "dinit-chimera-base"
+name = "dinit-base"
 arch = "x86_64"
-init = "dinit-chimera"
+init = "dinit"
 userland = "chimerautils"
 bootloaders = ["grub"]
 uefi_only = false

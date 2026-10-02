@@ -3,7 +3,7 @@ use std::fmt::Write as _;
 use super::shell::{iso_label, menu_title, sh_quote, sh_words};
 use super::{bootloader, dedup, enabled_services, ignored_packages, init, install_packages, repos};
 use crate::profile::validate::{firmware_owners, ValidProfile};
-use crate::profile::{Bootloader, Init, Profile};
+use crate::profile::{Bootloader, Profile};
 
 pub const OVERLAY_DIR: &str = "overlay";
 pub const HOOK_PATH: &str = "hooks/post_rootfs.sh";
@@ -52,7 +52,6 @@ pub fn generate_with(v: &ValidProfile, voidlab_repo: &str) -> String {
         .filter(|(_, bios, uefi)| *bios || *uefi)
         .collect();
     let label = iso_label(&p.name);
-    let dracut = init::uses_dracut(p.init);
 
     let mut s = String::new();
     header(&mut s, p, &active, &label);
@@ -63,7 +62,7 @@ pub fn generate_with(v: &ValidProfile, voidlab_repo: &str) -> String {
     }
 
     section(&mut s, 1, "preflight", "host tools for the chosen init and bootloaders");
-    preflight(&mut s, p, &active);
+    preflight(&mut s, &active);
 
     section(&mut s, 2, "repositories", "custom, then presets, then official");
     s.push_str("REPO_ARGS=(\n");
@@ -78,7 +77,7 @@ pub fn generate_with(v: &ValidProfile, voidlab_repo: &str) -> String {
     section(&mut s, 4, "configure", "overlay, identity, services, hook");
     configure(&mut s, p);
 
-    section(&mut s, 5, "kernel + initramfs", if dracut { "dracut + vmklive" } else { "dynamod-init" });
+    section(&mut s, 5, "kernel + initramfs", "dracut + vmklive");
     s.push_str(
         r#"KVER="$(ls "$ROOTFS/usr/lib/modules" | sort -V | tail -1)"
 [ -n "$KVER" ] || die "no kernel installed in the rootfs"
@@ -87,14 +86,14 @@ cp "$ROOTFS/boot/vmlinuz-$KVER" "$ISODIR/boot/vmlinuz"
     );
     s.push_str(init::initramfs_stage(p.init));
 
-    section(&mut s, 6, "squashfs", if dracut { "dmsquash-live layout" } else { "dynamod live layout" });
+    section(&mut s, 6, "squashfs", "dmsquash-live layout");
     s.push_str("rm -f \"$ROOTFS/etc/resolv.conf\"\numount_chroot\n");
     s.push_str(init::squashfs_stage(p.init));
 
     section(&mut s, 7, "bootloaders", &active_summary(&active));
     let cmdline = init::cmdline(p, &label);
     let _ = writeln!(s, "CMDLINE={}", sh_quote(&cmdline));
-    let ram = if dracut { format!("{cmdline} rd.live.ram") } else { String::new() };
+    let ram = format!("{cmdline} rd.live.ram");
     let _ = writeln!(s, "CMDLINE_RAM={}", sh_quote(&ram));
     for (b, bios, uefi) in &active {
         s.push_str(&bootloader::stage(*b, *bios, *uefi));
@@ -142,6 +141,9 @@ fn section(s: &mut String, n: u8, name: &str, why: &str) {
 }
 
 fn active_summary(active: &[(Bootloader, bool, bool)]) -> String {
+    if active.is_empty() {
+        return "none".into();
+    }
     active
         .iter()
         .map(|(b, bios, uefi)| {
@@ -156,7 +158,7 @@ fn active_summary(active: &[(Bootloader, bool, bool)]) -> String {
         .join(", ")
 }
 
-fn preflight(s: &mut String, p: &Profile, active: &[(Bootloader, bool, bool)]) {
+fn preflight(s: &mut String, active: &[(Bootloader, bool, bool)]) {
     s.push_str(
         r#"[ "$(id -u)" -eq 0 ] || die "run as root (chroot, mounts, mknod)"
 missing=0
@@ -170,11 +172,7 @@ need_file() { [ -e "$1" ] || { warn "missing host file $1 (xbps-install -S $2)";
         ("xorriso", "xorriso"),
         ("mountpoint", "util-linux"),
     ];
-    if init::uses_dracut(p.init) {
-        tools.push(("mkfs.ext3", "e2fsprogs"));
-    } else {
-        tools.extend([("readelf", "binutils"), ("cpio", "cpio"), ("gzip", "gzip"), ("modprobe", "kmod"), ("depmod", "kmod")]);
-    }
+    tools.push(("mkfs.ext3", "e2fsprogs"));
     let mut files = Vec::new();
     for (b, bios, uefi) in active {
         tools.extend(bootloader::host_tools(*b, *bios, *uefi));
@@ -227,11 +225,10 @@ cp -a /var/db/xbps/keys/. "$ROOTFS/var/db/xbps/keys/"
         }
         s.push_str("VESSEL_IGNORE\n");
     }
-    let force = if p.init == Init::Dynamod { " -I" } else { "" };
     let _ = writeln!(s, "info \"Installing {} packages into $ROOTFS\"", install_packages(p).len());
     let _ = writeln!(
         s,
-        "XBPS_ARCH=\"$ARCH\" xbps-install -S -y{force} -r \"$ROOTFS\" -C \"$ROOTFS/etc/xbps.d\" \"${{REPO_ARGS[@]}}\" \\\n\t{}",
+        "XBPS_ARCH=\"$ARCH\" xbps-install -S -y -r \"$ROOTFS\" -C \"$ROOTFS/etc/xbps.d\" \"${{REPO_ARGS[@]}}\" \\\n\t{}",
         sh_words(&install_packages(p))
     );
     s.push_str(
@@ -259,9 +256,6 @@ if [ -f "$ROOTFS/etc/default/libc-locales" ]; then
 fi
 "#,
     );
-    if p.init == Init::Dynamod {
-        s.push_str(init::dynamod_rootfs_extra());
-    }
     s.push_str(init::service_functions(p.init));
     for svc in enabled_services(p) {
         let _ = writeln!(s, "enable_service {}", sh_quote(&svc));

@@ -52,9 +52,7 @@ pub fn install_packages(p: &Profile) -> Vec<String> {
 }
 
 pub fn ignored_packages(p: &Profile) -> Vec<String> {
-    let mut out: Vec<String> = owned(init::ignore_packages(p.init)).collect();
-    out.extend(p.packages.exclude.iter().cloned());
-    dedup(out)
+    dedup(p.packages.exclude.clone())
 }
 
 pub fn enabled_services(p: &Profile) -> Vec<String> {

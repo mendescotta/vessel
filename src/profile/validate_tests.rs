@@ -23,15 +23,17 @@ fn default_profile_is_valid() {
 #[test]
 fn errors_withhold_valid_profile() {
     let mut p = Profile::new_default();
-    p.bootloaders.clear();
+    p.name.clear();
     assert!(validate(&p).1.is_none());
 }
 
 #[test]
-fn empty_bootloaders_error() {
+fn empty_bootloaders_only_warn() {
     let mut p = Profile::new_default();
     p.bootloaders.clear();
-    assert!(has_error(&p, "bootloaders"));
+    assert!(!has_error(&p, "bootloaders"));
+    assert!(validate(&p).1.is_some());
+    assert!(warnings(&p).iter().any(|i| i.field == "bootloaders"));
 }
 
 #[test]
@@ -79,17 +81,13 @@ fn uefi_only_drops_bios_owner() {
 #[test]
 fn required_repos() {
     let mut p = Profile::new_default();
-    p.init = Init::DinitChimera;
+    p.init = Init::Dinit;
     assert!(has_error(&p, "repos"));
     p.repos.presets.push(RepoPreset::Voidlab);
     assert!(!has_error(&p, "repos"));
 
-    p.init = Init::DinitNoid;
-    assert_eq!(required_presets(&p), vec![RepoPreset::Noid]);
     p.init = Init::Runit;
     p.userland = Userland::Chimerautils;
-    assert_eq!(required_presets(&p), vec![RepoPreset::Voidlab]);
-    p.init = Init::Dynamod;
     assert_eq!(required_presets(&p), vec![RepoPreset::Voidlab]);
 }
 
@@ -198,7 +196,8 @@ fn names_starting_with_dash_are_rejected_as_option_injection() {
 #[test]
 fn examples_validate() {
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("examples");
-    for name in ["dinit-chimera-base.toml", "dynamod-base.toml"] {
+    #[allow(clippy::single_element_loop)]
+    for name in ["dinit-base.toml"] {
         let p = Profile::load(&dir.join(name)).unwrap_or_else(|e| panic!("{name}: {e}"));
         let (issues, valid) = validate(&p);
         let errors: Vec<_> = issues.iter().filter(|i| i.severity == Severity::Error).collect();

@@ -50,8 +50,7 @@ pub fn required_presets(p: &Profile) -> Vec<RepoPreset> {
     };
     match p.init {
         Init::Runit => {}
-        Init::DinitChimera | Init::Dynamod => need(RepoPreset::Voidlab),
-        Init::DinitNoid => need(RepoPreset::Noid),
+        Init::Dinit => need(RepoPreset::Voidlab),
     }
     match p.userland {
         Userland::Gnu => {}
@@ -76,9 +75,6 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
         error("kernel", format!("kernel package {:?} can't start with '-'", p.kernel));
     }
 
-    if p.bootloaders.is_empty() {
-        error("bootloaders", "choose at least one bootloader".into());
-    }
     let mut seen = HashSet::new();
     for b in &p.bootloaders {
         if !seen.insert(b) {
@@ -100,7 +96,7 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
 
     for preset in required_presets(p) {
         if !p.repos.presets.contains(&preset) {
-            let who = if preset == RepoPreset::Noid || p.init != Init::Runit {
+            let who = if p.init != Init::Runit {
                 p.init.label()
             } else {
                 p.userland.label()
@@ -172,6 +168,9 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
     }
 
     let mut warn = |field, message: String| issues.push(Issue { severity: Severity::Warning, field, message });
+    if p.bootloaders.is_empty() {
+        warn("bootloaders", "no bootloader selected: the ISO will not boot on its own".into());
+    }
     for b in &p.bootloaders {
         if Some(*b) != fw.bios && Some(*b) != fw.uefi {
             let owner = fw.uefi.or(fw.bios).map(|o| o.label()).unwrap_or("another bootloader");

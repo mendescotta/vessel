@@ -2,7 +2,7 @@
 name = "vessel"
 version = "0.1.0"
 edition = "2021"
-description = "A GTK4 frontend for void-mklive / noid-mklive"
+description = "A GTK4 frontend for void-mklive"
 license = "GPL-3.0-or-later"
 
 [[bin]]

@@ -9,12 +9,12 @@ fn count(v: &[String], s: &str) -> usize {
 fn repo_order_custom_presets_official() {
     let mut p = Profile::new_default();
     p.repos.custom = vec!["https://example.org/repo".into()];
-    p.repos.presets = vec![RepoPreset::Noid, RepoPreset::Nonfree];
+    p.repos.presets = vec![RepoPreset::Voidlab, RepoPreset::Nonfree];
     assert_eq!(
         repos::repo_list_with(&p, "/vl/repo"),
         vec![
             "https://example.org/repo".to_string(),
-            repos::NOID.to_string(),
+            "/vl/repo".to_string(),
             format!("{}/nonfree", repos::OFFICIAL),
             repos::OFFICIAL.to_string(),
         ]
@@ -50,7 +50,7 @@ fn voidlab_path_prefers_env_then_home() {
 #[test]
 fn required_packages_dinit_chimera_gnome_lightdm() {
     let mut p = Profile::new_default();
-    p.init = Init::DinitChimera;
+    p.init = Init::Dinit;
     p.userland = Userland::Chimerautils;
     p.desktops = vec![Desktop::Gnome];
     p.display_manager = Dm::Lightdm;
@@ -67,15 +67,6 @@ fn console_profile_has_no_graphical_base() {
     assert!(pkgs.contains(&"base-system".to_string()));
     assert!(!pkgs.contains(&"xorg-minimal".to_string()));
     assert!(!pkgs.contains(&"NetworkManager".to_string()));
-}
-
-#[test]
-fn dynamod_has_no_dracut() {
-    let mut p = Profile::new_default();
-    p.init = Init::Dynamod;
-    let pkgs = required_packages(&p);
-    assert!(pkgs.contains(&"dynamod".to_string()));
-    assert!(!pkgs.contains(&"dracut".to_string()));
 }
 
 #[test]
@@ -103,11 +94,10 @@ fn services_union_dedup_and_disable() {
 }
 
 #[test]
-fn ignored_packages_are_init_ignores_plus_exclude() {
+fn ignored_packages_are_the_excludes() {
     let mut p = Profile::new_default();
-    p.init = Init::Dynamod;
     p.packages.exclude = vec!["nano".into()];
-    assert_eq!(ignored_packages(&p), vec!["runit-void".to_string(), "nano".to_string()]);
+    assert_eq!(ignored_packages(&p), vec!["nano".to_string()]);
 }
 
 #[test]
@@ -121,14 +111,14 @@ fn validate_rejects_excluding_required_package() {
 
 #[test]
 fn live_images_get_networking() {
-    for init in [Init::Runit, Init::DinitChimera, Init::DinitNoid] {
+    for init in [Init::Runit, Init::Dinit] {
         assert!(init::default_services(init).contains(&"dhcpcd"), "{init:?}");
     }
 }
 
 #[test]
 fn live_cmdline_uses_current_overlay_option() {
-    for init in [Init::Runit, Init::DinitChimera, Init::DinitNoid] {
+    for init in [Init::Runit, Init::Dinit] {
         let mut p = Profile::new_default();
         p.init = init;
         let c = init::cmdline(&p, "L");

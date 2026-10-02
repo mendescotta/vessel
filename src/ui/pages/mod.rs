@@ -3,6 +3,7 @@ pub mod desktop;
 pub mod output;
 pub mod repos;
 pub mod review;
+pub mod stack;
 pub mod start;
 pub mod system;
 

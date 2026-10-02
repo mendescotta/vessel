@@ -38,34 +38,23 @@ fn cmdline_per_init() {
     assert!(runit.contains("root=live:CDLABEL=LBL"), "{runit}");
     assert!(runit.contains("live.user=anon"));
     assert!(runit.contains("vconsole.keymap=us"));
-    assert!(!runit.contains("noid.init_system"));
+    assert!(!runit.contains("live.init_system"));
 
-    p.init = Init::DinitChimera;
-    assert!(init::cmdline(&p, "LBL").contains("noid.init_system=dinit"));
-    p.init = Init::DinitNoid;
-    assert!(init::cmdline(&p, "LBL").contains("noid.init_system=dinit"));
-
-    p.init = Init::Dynamod;
-    let d = init::cmdline(&p, "LBL");
-    assert!(d.contains("rdinit=/sbin/dynamod-init"), "{d}");
-    assert!(d.contains("dynamod.media=LABEL=LBL"));
-    assert!(!d.contains("root=live"));
+    p.init = Init::Dinit;
+    assert!(init::cmdline(&p, "LBL").contains("live.init_system=dinit"));
 }
 
 #[test]
 fn service_functions_use_init_layout() {
     assert!(init::service_functions(Init::Runit).contains("/etc/runit/runsvdir/default"));
-    assert!(init::service_functions(Init::DinitChimera).contains("/etc/dinit.d/boot.d"));
-    assert!(init::service_functions(Init::DinitChimera).contains("/usr/lib/dinit.d"));
-    assert!(init::service_functions(Init::Dynamod).contains("/usr/share/dynamod/desktop-services"));
+    assert!(init::service_functions(Init::Dinit).contains("/etc/dinit.d/boot.d"));
+    assert!(init::service_functions(Init::Dinit).contains("/usr/lib/dinit.d"));
 }
 
 #[test]
 fn initramfs_and_squashfs_per_init() {
     assert!(init::initramfs_stage(Init::Runit).contains("dracut"));
-    assert!(init::initramfs_stage(Init::Dynamod).contains("dynamod-initramfs.sh"));
     assert!(init::squashfs_stage(Init::Runit).contains("LiveOS/rootfs.img"));
-    assert!(init::squashfs_stage(Init::Dynamod).contains("live/root.squashfs"));
 }
 
 #[test]

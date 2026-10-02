@@ -1,6 +1,6 @@
 use super::*;
 use crate::profile::validate::validate;
-use crate::profile::{Init, Profile, RepoPreset};
+use crate::profile::Profile;
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
@@ -35,19 +35,14 @@ fn writes_script_profile_and_assets() {
 }
 
 #[test]
-fn resave_removes_stale_assets_and_switching_init_drops_vmklive() {
+fn resave_removes_stale_assets() {
     let dir = tmp("stale");
-    let mut p = Profile::new_default();
+    let p = Profile::new_default();
     save_output_with(&valid(&p), &dir, "/vl").unwrap();
     std::fs::write(dir.join("vmklive/stale.sh"), "x").unwrap();
     save_output_with(&valid(&p), &dir, "/vl").unwrap();
     assert!(!dir.join("vmklive/stale.sh").exists());
 
-    p.init = Init::Dynamod;
-    p.repos.presets = vec![RepoPreset::Voidlab];
-    save_output_with(&valid(&p), &dir, "/vl").unwrap();
-    assert!(!dir.join("vmklive").exists());
-    assert_eq!(mode(&dir.join("dynamod-initramfs.sh")), 0o755);
     std::fs::remove_dir_all(&dir).ok();
 }
 

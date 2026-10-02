@@ -1,4 +1,5 @@
 mod enums;
+pub mod stack;
 pub mod validate;
 
 use std::fmt;
@@ -43,10 +44,25 @@ pub struct Profile {
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Repos {
-    #[serde(default)]
+    #[serde(default, deserialize_with = "de_presets")]
     pub presets: Vec<RepoPreset>,
     #[serde(default)]
     pub custom: Vec<String>,
+}
+
+fn de_presets<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Vec<RepoPreset>, D::Error> {
+    use serde::de::Error;
+    let ids = Vec::<String>::deserialize(d)?;
+    ids.iter()
+        .filter(|id| id.as_str() != "noid")
+        .map(|id| {
+            RepoPreset::ALL
+                .iter()
+                .copied()
+                .find(|r| r.id() == id)
+                .ok_or_else(|| D::Error::custom(format!("unknown repository preset {id:?}")))
+        })
+        .collect()
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]

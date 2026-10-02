@@ -21,7 +21,7 @@ fn minimal_profile_gets_defaults() {
 #[test]
 fn round_trips() {
     let mut p = Profile::new_default();
-    p.init = Init::DinitChimera;
+    p.init = Init::Dinit;
     p.desktops = vec![Desktop::Gnome];
     p.repos.presets = vec![RepoPreset::Voidlab];
     p.packages.extra = vec!["firefox".into()];
@@ -33,14 +33,14 @@ fn kebab_case_ids() {
     let p = Profile::from_toml(
         r#"version = 1
 name = "x"
-init = "dinit-chimera"
+init = "dinit"
 userland = "chimerautils"
 bootloaders = ["limine", "refind"]
 display_manager = "cosmic-greeter"
 "#,
     )
     .unwrap();
-    assert_eq!(p.init, Init::DinitChimera);
+    assert_eq!(p.init, Init::Dinit);
     assert_eq!(p.userland, Userland::Chimerautils);
     assert_eq!(p.bootloaders, vec![Bootloader::Limine, Bootloader::Refind]);
     assert_eq!(p.display_manager, DisplayManager::CosmicGreeter);

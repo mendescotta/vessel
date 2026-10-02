@@ -1,17 +1,15 @@
 use adw::prelude::*;
 
-use super::{enum_row, issues_group, page, text_row};
-use crate::profile::{Init, Userland};
+use super::{issues_group, page, stack, text_row};
 use crate::ui::state::Shared;
 
 pub fn build(s: &Shared) -> gtk::Widget {
-    let page = page("System", "The base system: which init runs it, which core userland it ships, and how the live session identifies itself.");
+    let page = page("System", "The base system: which init and core userland it ships, and how the live session identifies itself.");
     page.add(&issues_group(s, &["name", "arch", "kernel", "live", "repos"]));
+    page.add(&stack::group(s));
 
     let base = adw::PreferencesGroup::builder().title("Base").build();
     base.add(&text_row(s, "Profile name", |p| p.name.clone(), |p, v| p.name = v));
-    base.add(&enum_row(s, "Init system", Init::ALL, Init::label, |p| p.init, |p, v| p.init = v));
-    base.add(&enum_row(s, "Core userland", Userland::ALL, Userland::label, |p| p.userland, |p, v| p.userland = v));
     base.add(&text_row(s, "Kernel package", |p| p.kernel.clone(), |p, v| p.kernel = v));
     page.add(&base);
 

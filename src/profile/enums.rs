@@ -9,6 +9,7 @@ macro_rules! axis {
         }
 
         impl $name {
+            #[allow(dead_code)]
             pub const ALL: &'static [Self] = &[$(Self::$variant,)+];
 
             pub fn id(self) -> &'static str {
@@ -22,16 +23,32 @@ macro_rules! axis {
     };
 }
 
-axis!(Init {
-    Runit => "runit", "runit";
-    DinitChimera => "dinit-chimera", "dinit (Chimera service set)";
-    DinitNoid => "dinit-noid", "dinit (noid)";
-    Dynamod => "dynamod", "dynamod";
-});
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Init {
+    #[serde(rename = "runit")]
+    Runit,
+    #[serde(rename = "dinit", alias = "dinit-chimera", alias = "dinit-noid")]
+    Dinit,
+}
+
+impl Init {
+    pub const ALL: &'static [Self] = &[Self::Runit, Self::Dinit];
+
+    pub fn id(self) -> &'static str {
+        match self {
+            Self::Runit => "runit",
+            Self::Dinit => "dinit",
+        }
+    }
+
+    pub fn label(self) -> &'static str {
+        self.id()
+    }
+}
 
 axis!(Userland {
     Gnu => "gnu", "GNU coreutils";
-    Chimerautils => "chimerautils", "chimerautils (FreeBSD-derived)";
+    Chimerautils => "chimerautils", "bsdutils";
 });
 
 axis!(Bootloader {
@@ -61,7 +78,6 @@ axis!(RepoPreset {
     Voidlab => "voidlab", "voidlab (local overlay repo)";
     Nonfree => "nonfree", "nonfree";
     Multilib => "multilib", "multilib";
-    Noid => "noid", "noid";
 });
 
 impl Bootloader {

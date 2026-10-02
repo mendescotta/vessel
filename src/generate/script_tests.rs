@@ -14,7 +14,7 @@ fn golden_profiles() -> Vec<(&'static str, Profile)> {
 
     let mut chimera = Profile::new_default();
     chimera.name = "void-gnome-dinit".into();
-    chimera.init = Init::DinitChimera;
+    chimera.init = Init::Dinit;
     chimera.userland = Userland::Chimerautils;
     chimera.bootloaders = vec![B::Limine];
     chimera.desktops = vec![Desktop::Gnome];
@@ -23,29 +23,20 @@ fn golden_profiles() -> Vec<(&'static str, Profile)> {
     chimera.packages.extra = vec!["firefox".into()];
     chimera.packages.exclude = vec!["nano".into()];
 
-    let mut noid = Profile::new_default();
-    noid.name = "noid-xfce".into();
-    noid.init = Init::DinitNoid;
-    noid.desktops = vec![Desktop::Xfce];
-    noid.display_manager = Dm::Lightdm;
-    noid.repos.presets = vec![RepoPreset::Noid, RepoPreset::Nonfree];
-    noid.services.enable = vec!["sshd".into()];
-
-    let mut dynamod = Profile::new_default();
-    dynamod.name = "dynamod-cosmic".into();
-    dynamod.init = Init::Dynamod;
-    dynamod.bootloaders = vec![B::Refind, B::Limine];
-    dynamod.desktops = vec![Desktop::Cosmic];
-    dynamod.display_manager = Dm::CosmicGreeter;
-    dynamod.repos.presets = vec![RepoPreset::Voidlab];
-    dynamod.overlay_dir = Some("/somewhere/overlay".into());
-    dynamod.post_rootfs_hook = Some("/somewhere/hook.sh".into());
+    let mut gnu = Profile::new_default();
+    gnu.name = "dinit-xfce".into();
+    gnu.init = Init::Dinit;
+    gnu.desktops = vec![Desktop::Xfce];
+    gnu.display_manager = Dm::Lightdm;
+    gnu.repos.presets = vec![RepoPreset::Voidlab, RepoPreset::Nonfree];
+    gnu.services.enable = vec!["sshd".into()];
+    gnu.overlay_dir = Some("/somewhere/overlay".into());
+    gnu.post_rootfs_hook = Some("/somewhere/hook.sh".into());
 
     vec![
         ("runit-grub-console", runit),
-        ("dinit-chimera-limine-gnome", chimera),
-        ("dinit-noid-grub-xfce", noid),
-        ("dynamod-refind-limine-cosmic", dynamod),
+        ("dinit-bsdutils-limine-gnome", chimera),
+        ("dinit-gnu-grub-xfce", gnu),
     ]
 }
 
@@ -112,31 +103,16 @@ fn wipe_happens_after_unmount() {
 }
 
 #[test]
-fn exclude_and_init_ignores_become_ignorepkg() {
+fn exclude_becomes_ignorepkg() {
     let mut p = Profile::new_default();
-    p.init = Init::Dynamod;
-    p.repos.presets = vec![RepoPreset::Voidlab];
     p.packages.exclude = vec!["nano".into()];
     let s = gen(p);
-    assert!(s.contains("ignorepkg=runit-void"));
     assert!(s.contains("ignorepkg=nano"));
 }
 
 #[test]
 fn no_ignore_file_when_nothing_ignored() {
     assert!(!gen(Profile::new_default()).contains("00-vessel.conf"));
-}
-
-#[test]
-fn dynamod_install_uses_force_flag_and_its_initramfs() {
-    let mut p = Profile::new_default();
-    p.init = Init::Dynamod;
-    p.repos.presets = vec![RepoPreset::Voidlab];
-    let s = gen(p);
-    assert!(s.contains("xbps-install -S -y -I"));
-    assert!(s.contains("dynamod-initramfs.sh"));
-    assert!(!s.contains("dracut -N"));
-    assert!(s.contains("CMDLINE_RAM=''"));
 }
 
 #[test]
@@ -280,4 +256,15 @@ fn free_space_is_checked_where_work_will_live() {
     let (_, dir) = run_bash(&format!("WORK=/nonexistent-vessel/a/b\n{check}echo \"$free_dir\""), &std::env::temp_dir());
     assert_eq!(dir, "/");
     assert!(s.contains("df --output=avail -BG \"$free_dir\""));
+}
+
+#[test]
+fn no_bootloader_builds_a_plain_iso() {
+    let mut p = Profile::new_default();
+    p.bootloaders.clear();
+    let s = gen(p);
+    assert!(s.contains("#   bootloaders: none"));
+    assert!(s.contains("xorriso -as mkisofs"));
+    assert!(!s.contains("-eltorito"));
+    assert!(!s.contains("-isohybrid-gpt-basdat"));
 }

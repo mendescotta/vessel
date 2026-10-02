@@ -27,7 +27,6 @@ pub fn save_output_with(v: &ValidProfile, dir: &Path, voidlab_repo: &str) -> io:
     }
 
     remove_path(&dir.join("vmklive"))?;
-    remove_path(&dir.join("dynamod-initramfs.sh"))?;
     for asset in assets_for(p.init) {
         let path = dir.join(asset.path);
         if let Some(parent) = path.parent() {

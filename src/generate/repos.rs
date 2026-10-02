@@ -1,7 +1,6 @@
 use crate::profile::{Profile, RepoPreset};
 
 pub const OFFICIAL: &str = "https://repo-default.voidlinux.org/current";
-pub const NOID: &str = "https://github.com/noid-linux/xbps-repo/releases/latest/download";
 
 pub fn voidlab_repo_path() -> String {
     voidlab_repo_path_from(std::env::var("VESSEL_VOIDLAB_REPO").ok(), std::env::var("HOME").ok())
@@ -15,7 +14,6 @@ pub fn voidlab_repo_path_from(env: Option<String>, home: Option<String>) -> Stri
 pub fn preset_urls(preset: RepoPreset, all: &[RepoPreset], voidlab: &str) -> Vec<String> {
     match preset {
         RepoPreset::Voidlab => vec![voidlab.to_string()],
-        RepoPreset::Noid => vec![NOID.to_string()],
         RepoPreset::Nonfree => vec![format!("{OFFICIAL}/nonfree")],
         RepoPreset::Multilib => {
             let mut v = vec![format!("{OFFICIAL}/multilib")];

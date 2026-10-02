@@ -27,12 +27,6 @@ const VMKLIVE: &[Asset] = &[
     asset!("vmklive/nomodeset.sh", true),
 ];
 
-const DYNAMOD_INITRAMFS: Asset = asset!("dynamod-initramfs.sh", true);
-
-pub fn assets_for(i: Init) -> Vec<Asset> {
-    if super::init::uses_dracut(i) {
-        VMKLIVE.to_vec()
-    } else {
-        vec![DYNAMOD_INITRAMFS]
-    }
+pub fn assets_for(_: Init) -> Vec<Asset> {
+    VMKLIVE.to_vec()
 }

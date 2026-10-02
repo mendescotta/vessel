@@ -8,7 +8,7 @@ use crate::ui::state::{self, Shared};
 pub fn build(s: &Shared) -> gtk::Widget {
     let page = page(
         "Boot",
-        "Pick one or more bootloaders. The first one in the list that supports a firmware path boots it, so rEFInd (UEFI only) needs GRUB or Limine for BIOS machines.",
+        "Pick one or more bootloaders, or none if you add your own. The first one in the list that supports a firmware path boots it, so rEFInd (UEFI only) needs GRUB or Limine for BIOS machines.",
     );
     page.add(&issues_group(s, &["bootloaders"]));
 
