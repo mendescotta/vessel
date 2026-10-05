@@ -302,3 +302,15 @@ fn only_the_official_void_key_is_copied_into_the_rootfs() {
         );
     }
 }
+
+#[test]
+fn package_cache_is_emptied_before_the_rootfs_is_packed() {
+    for (name, p) in golden_profiles() {
+        let script = gen(p);
+        let clean = script
+            .find("$ROOTFS/var/cache/xbps")
+            .unwrap_or_else(|| panic!("{name} never cleans the xbps package cache"));
+        let pack = script.find("mkfs.ext3 -q").unwrap_or_else(|| panic!("{name} has no image step"));
+        assert!(clean < pack, "{name} cleans the xbps cache after packing the rootfs");
+    }
+}

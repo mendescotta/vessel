@@ -177,6 +177,10 @@ rm -rf "$ROOTFS/usr/lib/dracut/modules.d/01vmklive"
 # --- 6. squashfs: dmsquash-live layout ---
 rm -f "$ROOTFS/etc/resolv.conf"
 umount_chroot
+# The cache only holds the .xbps files downloaded for this build; shipping it roughly doubles the image.
+if [ -d "$ROOTFS/var/cache/xbps" ]; then
+	find "$ROOTFS/var/cache/xbps" -mindepth 1 -delete
+fi
 info "Packing rootfs (dmsquash-live layout)"
 rm -rf "$WORK/squash"
 mkdir -p "$WORK/squash/LiveOS" "$ISODIR/LiveOS"

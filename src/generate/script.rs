@@ -88,6 +88,10 @@ cp "$ROOTFS/boot/vmlinuz-$KVER" "$ISODIR/boot/vmlinuz"
 
     section(&mut s, 6, "squashfs", "dmsquash-live layout");
     s.push_str("rm -f \"$ROOTFS/etc/resolv.conf\"\numount_chroot\n");
+    s.push_str(
+        "# The cache only holds the .xbps files downloaded for this build; shipping it roughly doubles the image.\n\
+         if [ -d \"$ROOTFS/var/cache/xbps\" ]; then\n\tfind \"$ROOTFS/var/cache/xbps\" -mindepth 1 -delete\nfi\n",
+    );
     s.push_str(init::squashfs_stage(p.init));
 
     section(&mut s, 7, "bootloaders", &active_summary(&active));
