@@ -64,12 +64,19 @@ Save writes to `~/vessel/<name>` (or a folder you pick):
 
 - `profile.toml`: the profile, reloadable in vessel
 - `build.sh`: the generated script
-- `vmklive/`: the dracut live module (vendored from noid-mklive; license in `vmklive/COPYING`)
+- `vmklive/`: the dracut live module (from void-mklive's dracut/vmklive module as modified in noid-mklive; license in `vmklive/COPYING`)
 - overlay and hook, when the profile uses them
 
 Saving again over the same folder replaces these files cleanly.
 
 ## Running
+
+A profile can also be turned into a script without the GUI:
+
+```
+vessel --generate profile.toml --out <dir>
+```
+
 
 ```
 cd ~/vessel/<name>
