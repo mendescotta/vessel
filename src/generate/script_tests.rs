@@ -268,3 +268,14 @@ fn no_bootloader_builds_a_plain_iso() {
     assert!(!s.contains("-eltorito"));
     assert!(!s.contains("-isohybrid-gpt-basdat"));
 }
+
+#[test]
+fn generated_scripts_reference_no_noid() {
+    for (name, p) in golden_profiles() {
+        let script = gen(p);
+        assert!(
+            !script.to_lowercase().contains("noid"),
+            "{name} generated script mentions noid"
+        );
+    }
+}
