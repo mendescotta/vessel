@@ -107,7 +107,13 @@ fi
 rm -rf "$WORK"
 mkdir -p "$ROOTFS/var/db/xbps/keys" "$ROOTFS/etc/xbps.d" "$ISODIR/boot" "$OUT"
 touch "$WORK/.vessel-work"
-cp -a /var/db/xbps/keys/. "$ROOTFS/var/db/xbps/keys/"
+# Only the official Void signing key is pre-trusted in the image (it signs the
+# main, nonfree, multilib and multilib/nonfree repositories); other keys on the
+# host (third-party repos) are not copied. Pinned by fingerprint, not by the
+# signer name a key declares for itself.
+VOID_KEY="60:ae:0c:d6:f0:95:17:80:bc:93:46:7a:89:af:a3:2d"
+[ -f "/var/db/xbps/keys/$VOID_KEY.plist" ] || die "official Void signing key $VOID_KEY not in /var/db/xbps/keys; run xbps-install -S once on this host"
+cp -a "/var/db/xbps/keys/$VOID_KEY.plist" "$ROOTFS/var/db/xbps/keys/"
 info "Installing 24 packages into $ROOTFS"
 XBPS_ARCH="$ARCH" xbps-install -S -y -r "$ROOTFS" -C "$ROOTFS/etc/xbps.d" "${REPO_ARGS[@]}" \
 	'linux' 'base-system-dinit' 'dinit-chimera' 'dinit-void' 'dracut' 'binutils' 'xz' 'device-mapper' 'dhclient' 'dracut-network' 'openresolv' 'dbus' 'elogind' 'polkit' 'NetworkManager' 'xorg-minimal' 'xorg-fonts' 'mesa-dri' 'pipewire' 'wireplumber' 'xdg-user-dirs' 'xfce4' 'lightdm' 'lightdm-gtk3-greeter'

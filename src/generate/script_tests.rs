@@ -279,3 +279,26 @@ fn generated_scripts_reference_no_noid() {
         );
     }
 }
+
+#[test]
+fn only_the_official_void_key_is_copied_into_the_rootfs() {
+    for (name, p) in golden_profiles() {
+        let script = gen(p);
+        assert!(
+            !script.contains("cp -a /var/db/xbps/keys/."),
+            "{name} copies every host key into the image"
+        );
+        assert!(
+            !script.contains("<string>Void Linux</string>"),
+            "{name} selects keys by their self-declared signer name"
+        );
+        assert!(
+            script.contains("60:ae:0c:d6:f0:95:17:80:bc:93:46:7a:89:af:a3:2d"),
+            "{name} does not pin the official Void key fingerprint"
+        );
+        assert!(
+            script.contains("official Void signing key"),
+            "{name} does not fail when the official key is missing"
+        );
+    }
+}
