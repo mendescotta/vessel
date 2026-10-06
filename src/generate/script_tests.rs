@@ -314,3 +314,13 @@ fn package_cache_is_emptied_before_the_rootfs_is_packed() {
         assert!(clean < pack, "{name} cleans the xbps cache after packing the rootfs");
     }
 }
+
+#[test]
+fn iso_and_checksum_are_handed_back_to_the_sudo_user() {
+    let script = gen(Profile::new_default());
+    let chown = script.find("chown \"$SUDO_UID:").expect("script chowns the results to the sudo user");
+    let done = script.find("info \"Done: $ISO\"").expect("script reports completion");
+    let checksum = script.find("sha256sum").expect("script writes the checksum");
+    assert!(checksum < chown && chown < done, "chown must come after the checksum and before Done");
+    assert!(script.contains("\"$ISO\" \"$ISO.sha256\""), "both the ISO and its checksum are chowned");
+}

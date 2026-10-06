@@ -302,6 +302,10 @@ fn iso(s: &mut String, active: &[(Bootloader, bool, bool)]) {
     }
     s.push_str(
         r#"(cd "$OUT" && sha256sum "$(basename "$ISO")" > "$(basename "$ISO").sha256")
+# The script runs as root (sudo); hand the results back to the user who invoked it.
+if [ -n "${SUDO_UID:-}" ]; then
+	chown "$SUDO_UID:${SUDO_GID:-$SUDO_UID}" "$ISO" "$ISO.sha256"
+fi
 info "Done: $ISO"
 "#,
     );
