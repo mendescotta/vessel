@@ -32,7 +32,11 @@ pub fn save_output_with(v: &ValidProfile, dir: &Path, voidlab_repo: &str) -> io:
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)?;
         }
-        write_mode(&path, asset.contents, if asset.executable { 0o755 } else { 0o644 })?;
+        write_mode(
+            &path,
+            asset.contents,
+            if asset.executable { 0o755 } else { 0o644 },
+        )?;
     }
 
     let mut saved = p.clone();
@@ -57,7 +61,10 @@ pub fn save_output_with(v: &ValidProfile, dir: &Path, voidlab_repo: &str) -> io:
         Some(_) => {}
         None => remove_path(&hook_dest)?,
     }
-    saved.post_rootfs_hook = p.post_rootfs_hook.as_ref().map(|_| PathBuf::from(HOOK_PATH));
+    saved.post_rootfs_hook = p
+        .post_rootfs_hook
+        .as_ref()
+        .map(|_| PathBuf::from(HOOK_PATH));
 
     write_mode(&dir.join("profile.toml"), &saved.to_toml(), 0o644)?;
     let script = dir.join("build.sh");
@@ -66,7 +73,10 @@ pub fn save_output_with(v: &ValidProfile, dir: &Path, voidlab_repo: &str) -> io:
 }
 
 fn write_mode(path: &Path, contents: &str, mode: u32) -> io::Result<()> {
-    let name = path.file_name().expect("output paths have a file name").to_string_lossy();
+    let name = path
+        .file_name()
+        .expect("output paths have a file name")
+        .to_string_lossy();
     let tmp = path.with_file_name(format!(".{name}.tmp"));
     fs::write(&tmp, contents)?;
     fs::set_permissions(&tmp, fs::Permissions::from_mode(mode))?;

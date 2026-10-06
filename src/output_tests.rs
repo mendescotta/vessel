@@ -26,7 +26,9 @@ fn writes_script_profile_and_assets() {
     let script = save_output_with(&valid(&Profile::new_default()), &dir, "/vl").unwrap();
     assert_eq!(script, dir.join("build.sh"));
     assert_eq!(mode(&script), 0o755);
-    assert!(std::fs::read_to_string(&script).unwrap().starts_with("#!/bin/bash"));
+    assert!(std::fs::read_to_string(&script)
+        .unwrap()
+        .starts_with("#!/bin/bash"));
     assert!(dir.join("profile.toml").is_file());
     assert!(dir.join("vmklive/module-setup.sh").is_file());
     assert_eq!(mode(&dir.join("vmklive/module-setup.sh")), 0o755);
@@ -59,13 +61,19 @@ fn copies_overlay_and_hook_and_rewrites_profile_paths() {
     let dir = tmp("dest");
     std::fs::create_dir_all(dir.join("overlay/old")).unwrap();
     save_output_with(&valid(&p), &dir, "/vl").unwrap();
-    assert_eq!(std::fs::read_to_string(dir.join("overlay/etc/skel/.bashrc")).unwrap(), "hi");
+    assert_eq!(
+        std::fs::read_to_string(dir.join("overlay/etc/skel/.bashrc")).unwrap(),
+        "hi"
+    );
     assert!(!dir.join("overlay/old").exists());
     assert_eq!(mode(&dir.join("hooks/post_rootfs.sh")), 0o755);
 
     let saved = Profile::load(&dir.join("profile.toml")).unwrap();
     assert_eq!(saved.overlay_dir, Some(dir.join("overlay")));
-    assert_eq!(saved.post_rootfs_hook, Some(dir.join("hooks/post_rootfs.sh")));
+    assert_eq!(
+        saved.post_rootfs_hook,
+        Some(dir.join("hooks/post_rootfs.sh"))
+    );
     assert!(validate(&saved).1.is_some());
     std::fs::remove_dir_all(&dir).ok();
     std::fs::remove_dir_all(&src).ok();
@@ -79,7 +87,10 @@ fn resave_with_overlay_already_in_folder_keeps_it() {
     p.overlay_dir = Some(dir.join("overlay"));
     std::fs::write(dir.join("overlay/keep"), "k").unwrap();
     save_output_with(&valid(&p), &dir, "/vl").unwrap();
-    assert_eq!(std::fs::read_to_string(dir.join("overlay/keep")).unwrap(), "k");
+    assert_eq!(
+        std::fs::read_to_string(dir.join("overlay/keep")).unwrap(),
+        "k"
+    );
     std::fs::remove_dir_all(&dir).ok();
 }
 
@@ -107,8 +118,13 @@ fn resave_does_not_change_a_script_that_is_running() {
 
     let mut seen = String::new();
     running.read_to_string(&mut seen).unwrap();
-    assert!(seen == before, "the open build.sh changed under the running reader");
-    assert!(std::fs::read_to_string(&script).unwrap().contains("renamed-while-building"));
+    assert!(
+        seen == before,
+        "the open build.sh changed under the running reader"
+    );
+    assert!(std::fs::read_to_string(&script)
+        .unwrap()
+        .contains("renamed-while-building"));
     assert_eq!(mode(&script), 0o755);
 }
 

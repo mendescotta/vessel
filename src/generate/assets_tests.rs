@@ -16,10 +16,18 @@ fn every_shell_asset_parses() {
     let dir = std::env::temp_dir().join(format!("vessel-assets-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     for init in [Init::Runit] {
-        for a in assets_for(init).into_iter().filter(|a| a.path.ends_with(".sh")) {
+        for a in assets_for(init)
+            .into_iter()
+            .filter(|a| a.path.ends_with(".sh"))
+        {
             let f = dir.join(a.path.replace('/', "_"));
             std::fs::write(&f, a.contents).unwrap();
-            let ok = std::process::Command::new("bash").arg("-n").arg(&f).status().unwrap().success();
+            let ok = std::process::Command::new("bash")
+                .arg("-n")
+                .arg(&f)
+                .status()
+                .unwrap()
+                .success();
             assert!(ok, "{} fails bash -n", a.path);
         }
     }

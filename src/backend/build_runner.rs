@@ -101,7 +101,10 @@ mod tests {
         let events = events.lock().unwrap().clone();
         assert_eq!(
             events,
-            vec![BuildEvent::Log("oops".to_string()), BuildEvent::Finished(BuildResult::Failed(1))]
+            vec![
+                BuildEvent::Log("oops".to_string()),
+                BuildEvent::Finished(BuildResult::Failed(1))
+            ]
         );
     }
 

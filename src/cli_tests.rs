@@ -31,7 +31,11 @@ fn generate_reports_a_missing_profile() {
 fn generate_refuses_an_invalid_profile() {
     let out = tmp("bad");
     let bad = out.join("bad.toml");
-    std::fs::write(&bad, "version = 1\nname = \"x\"\ninit = \"dinit\"\nuserland = \"gnu\"\nbootloaders = []\n").unwrap();
+    std::fs::write(
+        &bad,
+        "version = 1\nname = \"x\"\ninit = \"dinit\"\nuserland = \"gnu\"\nbootloaders = []\n",
+    )
+    .unwrap();
     assert!(generate(&bad, &out.join("o"), "/vl").is_err());
     std::fs::remove_dir_all(&out).ok();
 }

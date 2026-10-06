@@ -8,7 +8,15 @@ pub fn base_packages(i: Init) -> &'static [&'static str] {
 }
 
 pub fn initramfs_packages(_: Init) -> &'static [&'static str] {
-    &["dracut", "binutils", "xz", "device-mapper", "dhclient", "dracut-network", "openresolv"]
+    &[
+        "dracut",
+        "binutils",
+        "xz",
+        "device-mapper",
+        "dhclient",
+        "dracut-network",
+        "openresolv",
+    ]
 }
 
 pub fn default_services(i: Init) -> &'static [&'static str] {
@@ -33,7 +41,8 @@ pub fn cmdline(p: &crate::profile::Profile, label: &str) -> String {
 
 pub fn service_functions(i: Init) -> &'static str {
     match i {
-        Init::Runit => r#"enable_service() {
+        Init::Runit => {
+            r#"enable_service() {
 	if [ -d "$ROOTFS/etc/sv/$1" ]; then
 		ln -sfn "/etc/sv/$1" "$ROOTFS/etc/runit/runsvdir/default/$1"
 	else
@@ -43,8 +52,10 @@ pub fn service_functions(i: Init) -> &'static str {
 disable_service() {
 	rm -f "$ROOTFS/etc/runit/runsvdir/default/$1"
 }
-"#,
-        Init::Dinit => r#"enable_service() {
+"#
+        }
+        Init::Dinit => {
+            r#"enable_service() {
 	local d
 	mkdir -p "$ROOTFS/etc/dinit.d/boot.d"
 	for d in /etc/dinit.d /usr/lib/dinit.d; do
@@ -58,7 +69,8 @@ disable_service() {
 disable_service() {
 	rm -f "$ROOTFS/etc/dinit.d/boot.d/$1"
 }
-"#,
+"#
+        }
     }
 }
 

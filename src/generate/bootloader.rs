@@ -153,7 +153,9 @@ pub fn xorriso_bios_args(b: Bootloader) -> &'static str {
             "-b boot/grub/i386-pc/eltorito.img -no-emul-boot -boot-load-size 4 -boot-info-table \
              --grub2-boot-info --grub2-mbr /usr/lib/grub/i386-pc/boot_hybrid.img"
         }
-        Bootloader::Limine => "-b boot/limine/limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table",
+        Bootloader::Limine => {
+            "-b boot/limine/limine-bios-cd.bin -no-emul-boot -boot-load-size 4 -boot-info-table"
+        }
         Bootloader::Refind => unreachable!("rEFInd never owns BIOS boot"),
     }
 }

@@ -28,7 +28,13 @@ fn old_init_ids_load_as_dinit() {
 
 #[test]
 fn old_noid_preset_is_ignored_and_unknown_ones_error() {
-    let ok = format!("{}\n[repos]\npresets = [\"voidlab\", \"noid\"]\n", include_str!("../../examples/dinit-base.toml").split("[repos]").next().unwrap());
+    let ok = format!(
+        "{}\n[repos]\npresets = [\"voidlab\", \"noid\"]\n",
+        include_str!("../../examples/dinit-base.toml")
+            .split("[repos]")
+            .next()
+            .unwrap()
+    );
     let p: Profile = toml::from_str(&ok).unwrap();
     assert_eq!(p.repos.presets, vec![RepoPreset::Voidlab]);
 

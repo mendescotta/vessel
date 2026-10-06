@@ -15,7 +15,8 @@ impl FakeHost {
         self
     }
     fn dir(mut self, p: &str, entries: &[&str]) -> Self {
-        self.dirs.insert(p.into(), entries.iter().map(|s| s.to_string()).collect());
+        self.dirs
+            .insert(p.into(), entries.iter().map(|s| s.to_string()).collect());
         self
     }
     fn cmd(mut self, key: &str, out: &str) -> Self {
@@ -84,14 +85,19 @@ fn etc_overrides_same_named_usr_share_conf() {
         .dir("/etc/xbps.d", &["10-repository-nonfree.conf"])
         .file("/etc/xbps.d/10-repository-nonfree.conf", "# disabled\n")
         .dir("/usr/share/xbps.d", &["10-repository-nonfree.conf"])
-        .file("/usr/share/xbps.d/10-repository-nonfree.conf", "repository=https://repo-default.voidlinux.org/current/nonfree\n");
+        .file(
+            "/usr/share/xbps.d/10-repository-nonfree.conf",
+            "repository=https://repo-default.voidlinux.org/current/nonfree\n",
+        );
     let (p, _) = snapshot_with(&host, "/vl");
     assert!(!p.repos.presets.contains(&RepoPreset::Nonfree));
 }
 
 #[test]
 fn detects_runit() {
-    let runit = FakeHost::default().dir("/var/service", &["sddm", "agetty-tty1"]).cmd("xbps-query -l", "ii kde-plasma-6.0_1 x\n");
+    let runit = FakeHost::default()
+        .dir("/var/service", &["sddm", "agetty-tty1"])
+        .cmd("xbps-query -l", "ii kde-plasma-6.0_1 x\n");
     let (p, _) = snapshot_with(&runit, "/vl");
     assert_eq!(p.init, Init::Runit);
     assert_eq!(p.desktops, vec![Desktop::Kde]);
@@ -116,7 +122,11 @@ fn pkgname_strips_version() {
 #[ignore = "reads the real host; run with --ignored"]
 fn real_host_smoke() {
     let (p, warnings) = snapshot(&RealHost);
-    println!("{}\nwarnings: {warnings:?}\nextras: {}", p.to_toml(), p.packages.extra.len());
+    println!(
+        "{}\nwarnings: {warnings:?}\nextras: {}",
+        p.to_toml(),
+        p.packages.extra.len()
+    );
     let (issues, _) = crate::profile::validate::validate(&p);
     println!("issues: {issues:?}");
 }

@@ -36,7 +36,11 @@ pub struct Firmware {
 }
 
 pub fn firmware_owners(p: &Profile) -> Firmware {
-    let bios = if p.uefi_only { None } else { p.bootloaders.iter().copied().find(|b| b.bios()) };
+    let bios = if p.uefi_only {
+        None
+    } else {
+        p.bootloaders.iter().copied().find(|b| b.bios())
+    };
     let uefi = p.bootloaders.iter().copied().find(|b| b.uefi());
     Firmware { bios, uefi }
 }
@@ -61,18 +65,39 @@ pub fn required_presets(p: &Profile) -> Vec<RepoPreset> {
 
 pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
     let mut issues = Vec::new();
-    let mut error = |field, message: String| issues.push(Issue { severity: Severity::Error, field, message });
+    let mut error = |field, message: String| {
+        issues.push(Issue {
+            severity: Severity::Error,
+            field,
+            message,
+        })
+    };
 
     if p.name.trim().is_empty() {
         error("name", "give the profile a name".into());
     }
     if p.arch != "x86_64" {
-        error("arch", format!("architecture {:?} is not supported yet (only x86_64)", p.arch));
+        error(
+            "arch",
+            format!(
+                "architecture {:?} is not supported yet (only x86_64)",
+                p.arch
+            ),
+        );
     }
     if !is_token(&p.kernel) {
-        error("kernel", format!("kernel package {:?} must be a single package name", p.kernel));
+        error(
+            "kernel",
+            format!(
+                "kernel package {:?} must be a single package name",
+                p.kernel
+            ),
+        );
     } else if is_option(&p.kernel) {
-        error("kernel", format!("kernel package {:?} can't start with '-'", p.kernel));
+        error(
+            "kernel",
+            format!("kernel package {:?} can't start with '-'", p.kernel),
+        );
     }
 
     let mut seen = HashSet::new();
@@ -101,12 +126,18 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
             } else {
                 p.userland.label()
             };
-            error("repos", format!("{who} needs the {} repository", preset.id()));
+            error(
+                "repos",
+                format!("{who} needs the {} repository", preset.id()),
+            );
         }
     }
     for url in &p.repos.custom {
         if !is_token(url) {
-            error("repos", format!("repository {url:?} must be a single URL or path"));
+            error(
+                "repos",
+                format!("repository {url:?} must be a single URL or path"),
+            );
         } else if is_option(url) {
             error("repos", format!("repository {url:?} can't start with '-'"));
         }
@@ -114,13 +145,19 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
 
     let dm = p.display_manager;
     if dm != DisplayManager::None && p.desktops.is_empty() {
-        error("display_manager", format!("{} needs at least one desktop", dm.label()));
+        error(
+            "display_manager",
+            format!("{} needs at least one desktop", dm.label()),
+        );
     }
     if dm == DisplayManager::Gdm && !p.desktops.contains(&Desktop::Gnome) {
         error("display_manager", "GDM requires the GNOME desktop".into());
     }
     if dm == DisplayManager::CosmicGreeter && !p.desktops.contains(&Desktop::Cosmic) {
-        error("display_manager", "COSMIC Greeter requires the COSMIC desktop".into());
+        error(
+            "display_manager",
+            "COSMIC Greeter requires the COSMIC desktop".into(),
+        );
     }
 
     for (field, list) in [
@@ -131,7 +168,10 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
     ] {
         for item in list {
             if !is_token(item) {
-                error(field, format!("{item:?} must be a single name without spaces"));
+                error(
+                    field,
+                    format!("{item:?} must be a single name without spaces"),
+                );
             } else if is_option(item) {
                 error(field, format!("{item:?} can't start with '-'"));
             }
@@ -140,7 +180,10 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
     let required = crate::generate::required_packages(p);
     for pkg in &p.packages.exclude {
         if required.contains(pkg) {
-            error("packages", format!("{pkg} can't be excluded: the chosen options need it"));
+            error(
+                "packages",
+                format!("{pkg} can't be excluded: the chosen options need it"),
+            );
         }
     }
 
@@ -148,40 +191,81 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
         error("live", format!("hostname {:?} must be 1-63 letters, digits or '-', not starting or ending with '-'", p.live.hostname));
     }
     if !valid_user(&p.live.user) {
-        error("live", format!("user name {:?} must match [a-z_][a-z0-9_-]*", p.live.user));
+        error(
+            "live",
+            format!("user name {:?} must match [a-z_][a-z0-9_-]*", p.live.user),
+        );
     }
-    for (what, v) in [("locale", &p.live.locale), ("keymap", &p.live.keymap), ("timezone", &p.live.timezone)] {
+    for (what, v) in [
+        ("locale", &p.live.locale),
+        ("keymap", &p.live.keymap),
+        ("timezone", &p.live.timezone),
+    ] {
         if !is_token(v) {
-            error("live", format!("{what} {v:?} must be a single value without spaces"));
+            error(
+                "live",
+                format!("{what} {v:?} must be a single value without spaces"),
+            );
         }
     }
 
     if let Some(dir) = &p.overlay_dir {
         if !dir.is_dir() {
-            error("overlay_dir", format!("overlay folder {} does not exist", dir.display()));
+            error(
+                "overlay_dir",
+                format!("overlay folder {} does not exist", dir.display()),
+            );
         }
     }
     if let Some(hook) = &p.post_rootfs_hook {
         if !hook.is_file() {
-            error("post_rootfs_hook", format!("hook script {} does not exist", hook.display()));
+            error(
+                "post_rootfs_hook",
+                format!("hook script {} does not exist", hook.display()),
+            );
         }
     }
 
-    let mut warn = |field, message: String| issues.push(Issue { severity: Severity::Warning, field, message });
+    let mut warn = |field, message: String| {
+        issues.push(Issue {
+            severity: Severity::Warning,
+            field,
+            message,
+        })
+    };
     if p.bootloaders.is_empty() {
-        warn("bootloaders", "no bootloader selected: the ISO will not boot on its own".into());
+        warn(
+            "bootloaders",
+            "no bootloader selected: the ISO will not boot on its own".into(),
+        );
     }
     for b in &p.bootloaders {
         if Some(*b) != fw.bios && Some(*b) != fw.uefi {
-            let owner = fw.uefi.or(fw.bios).map(|o| o.label()).unwrap_or("another bootloader");
-            warn("bootloaders", format!("{} is unused: {owner} already covers its firmware", b.label()));
+            let owner = fw
+                .uefi
+                .or(fw.bios)
+                .map(|o| o.label())
+                .unwrap_or("another bootloader");
+            warn(
+                "bootloaders",
+                format!(
+                    "{} is unused: {owner} already covers its firmware",
+                    b.label()
+                ),
+            );
         }
     }
     if !p.desktops.is_empty() && dm == DisplayManager::None {
-        warn("display_manager", "desktops are selected but no display manager: you'll log in on the console".into());
+        warn(
+            "display_manager",
+            "desktops are selected but no display manager: you'll log in on the console".into(),
+        );
     }
 
-    let valid = issues.iter().all(|i| i.severity != Severity::Error).then(|| ValidProfile(p.clone()));
+    let valid = issues
+        .iter()
+        .all(|i| i.severity != Severity::Error)
+        .then(|| ValidProfile(p.clone()));
     (issues, valid)
 }
 

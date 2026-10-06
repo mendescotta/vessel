@@ -9,7 +9,11 @@ pub struct Asset {
 
 macro_rules! asset {
     ($path:literal, $exec:expr) => {
-        Asset { path: $path, contents: include_str!(concat!("../../assets/", $path)), executable: $exec }
+        Asset {
+            path: $path,
+            contents: include_str!(concat!("../../assets/", $path)),
+            executable: $exec,
+        }
     };
 }
 

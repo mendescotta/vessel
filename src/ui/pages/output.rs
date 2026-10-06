@@ -25,32 +25,62 @@ pub fn build(s: &Shared) -> gtk::Widget {
         let (chosen, s) = (chosen.clone(), s.clone());
         move || -> PathBuf {
             chosen.borrow().clone().unwrap_or_else(|| {
-                let home = std::env::var_os("HOME").map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."));
+                let home = std::env::var_os("HOME")
+                    .map(PathBuf::from)
+                    .unwrap_or_else(|| PathBuf::from("."));
                 home.join("vessel").join(&s.borrow().profile.name)
             })
         }
     };
 
-    let group = adw::PreferencesGroup::builder().title("Output folder").build();
-    let folder = adw::ActionRow::builder().title("Folder").subtitle(outdir().display().to_string()).build();
-    let choose = gtk::Button::builder().label("Choose…").valign(gtk::Align::Center).build();
+    let group = adw::PreferencesGroup::builder()
+        .title("Output folder")
+        .build();
+    let folder = adw::ActionRow::builder()
+        .title("Folder")
+        .subtitle(outdir().display().to_string())
+        .build();
+    let choose = gtk::Button::builder()
+        .label("Choose…")
+        .valign(gtk::Align::Center)
+        .build();
     folder.add_suffix(&choose);
     group.add(&folder);
     page.add(&group);
 
     let actions = adw::PreferencesGroup::new();
-    let buttons = gtk::Box::builder().spacing(12).halign(gtk::Align::Center).build();
-    let save = gtk::Button::builder().label("Save").css_classes(["pill", "suggested-action"]).build();
-    let run = gtk::Button::builder().label("Build now").css_classes(["pill"]).sensitive(false).build();
+    let buttons = gtk::Box::builder()
+        .spacing(12)
+        .halign(gtk::Align::Center)
+        .build();
+    let save = gtk::Button::builder()
+        .label("Save")
+        .css_classes(["pill", "suggested-action"])
+        .build();
+    let run = gtk::Button::builder()
+        .label("Build now")
+        .css_classes(["pill"])
+        .sensitive(false)
+        .build();
     buttons.append(&save);
     buttons.append(&run);
     actions.add(&buttons);
     page.add(&actions);
 
-    let log_group = adw::PreferencesGroup::builder().title("Build log").visible(false).build();
+    let log_group = adw::PreferencesGroup::builder()
+        .title("Build log")
+        .visible(false)
+        .build();
     let status = gtk::Label::builder().xalign(0.0).build();
-    let log = gtk::TextView::builder().editable(false).monospace(true).build();
-    let scroller = gtk::ScrolledWindow::builder().min_content_height(360).child(&log).css_classes(["card"]).build();
+    let log = gtk::TextView::builder()
+        .editable(false)
+        .monospace(true)
+        .build();
+    let scroller = gtk::ScrolledWindow::builder()
+        .min_content_height(360)
+        .child(&log)
+        .css_classes(["card"])
+        .build();
     log_group.add(&status);
     log_group.add(&scroller);
     page.add(&log_group);
@@ -58,7 +88,13 @@ pub fn build(s: &Shared) -> gtk::Widget {
     let saved: Rc<RefCell<Option<PathBuf>>> = Rc::default();
 
     {
-        let (folder, s, outdir, run, saved) = (folder.clone(), s.clone(), outdir.clone(), run.clone(), saved.clone());
+        let (folder, s, outdir, run, saved) = (
+            folder.clone(),
+            s.clone(),
+            outdir.clone(),
+            run.clone(),
+            saved.clone(),
+        );
         state::on_change(&s, move |_, _, _| {
             folder.set_subtitle(&outdir().display().to_string());
             saved.borrow_mut().take();
@@ -68,7 +104,9 @@ pub fn build(s: &Shared) -> gtk::Widget {
     {
         let (folder, chosen, outdir) = (folder.clone(), chosen.clone(), outdir.clone());
         choose.connect_clicked(move |btn| {
-            let dialog = gtk::FileDialog::builder().title("Choose output folder").build();
+            let dialog = gtk::FileDialog::builder()
+                .title("Choose output folder")
+                .build();
             let window = btn.root().and_downcast::<gtk::Window>();
             let (folder, chosen, outdir) = (folder.clone(), chosen.clone(), outdir.clone());
             dialog.select_folder(window.as_ref(), gio::Cancellable::NONE, move |res| {
@@ -94,7 +132,10 @@ pub fn build(s: &Shared) -> gtk::Widget {
                     *saved.borrow_mut() = Some(dir);
                     run.set_sensitive(true);
                 }
-                Err(e) => toasts.add_toast(adw::Toast::new(&format!("Couldn't save to {}: {e}", dir.display()))),
+                Err(e) => toasts.add_toast(adw::Toast::new(&format!(
+                    "Couldn't save to {}: {e}",
+                    dir.display()
+                ))),
             }
         });
     }

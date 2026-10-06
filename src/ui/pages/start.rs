@@ -19,9 +19,18 @@ pub fn build(s: &Shared, nav: Navigate) -> gtk::Widget {
         .spacing(12)
         .halign(gtk::Align::Center)
         .build();
-    let new_btn = gtk::Button::builder().label("New profile").css_classes(["pill", "suggested-action"]).build();
-    let open_btn = gtk::Button::builder().label("Open profile…").css_classes(["pill"]).build();
-    let seed_btn = gtk::Button::builder().label("Seed from this system").css_classes(["pill"]).build();
+    let new_btn = gtk::Button::builder()
+        .label("New profile")
+        .css_classes(["pill", "suggested-action"])
+        .build();
+    let open_btn = gtk::Button::builder()
+        .label("Open profile…")
+        .css_classes(["pill"])
+        .build();
+    let seed_btn = gtk::Button::builder()
+        .label("Seed from this system")
+        .css_classes(["pill"])
+        .build();
     buttons.append(&new_btn);
     buttons.append(&open_btn);
     buttons.append(&seed_btn);
@@ -57,7 +66,11 @@ pub fn build(s: &Shared, nav: Navigate) -> gtk::Widget {
                 btn.set_sensitive(true);
                 btn.set_label("Seed from this system");
                 let Ok((profile, warnings)) = result else {
-                    show_error(&btn, "Snapshot failed", "Reading the system panicked; see the terminal output.");
+                    show_error(
+                        &btn,
+                        "Snapshot failed",
+                        "Reading the system panicked; see the terminal output.",
+                    );
                     return;
                 };
                 state::replace(&s, profile);

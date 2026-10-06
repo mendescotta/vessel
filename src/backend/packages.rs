@@ -13,7 +13,11 @@ pub fn check_with(command: &str, name: &str) -> std::io::Result<PackageCheck> {
         .stdout(Stdio::null())
         .stderr(Stdio::null())
         .status()?;
-    Ok(if status.success() { PackageCheck::Exists } else { PackageCheck::NotFound })
+    Ok(if status.success() {
+        PackageCheck::Exists
+    } else {
+        PackageCheck::NotFound
+    })
 }
 
 pub fn package_exists(name: &str) -> std::io::Result<PackageCheck> {
@@ -33,16 +37,19 @@ mod tests {
             .as_nanos();
         let mut counter = 0;
         loop {
-            let path = std::env::temp_dir().join(
-                format!("vessel-fake-xbps-query-{}-{}", nanos, counter)
-            );
+            let path =
+                std::env::temp_dir().join(format!("vessel-fake-xbps-query-{}-{}", nanos, counter));
             match std::fs::OpenOptions::new()
                 .write(true)
                 .create_new(true)
                 .open(&path)
             {
                 Ok(mut file) => {
-                    writeln!(file, "#!/bin/sh\n[ \"$2\" = \"firefox\" ] && exit 0\nexit 1").unwrap();
+                    writeln!(
+                        file,
+                        "#!/bin/sh\n[ \"$2\" = \"firefox\" ] && exit 0\nexit 1"
+                    )
+                    .unwrap();
                     file.sync_all().unwrap();
                     drop(file);
                     std::thread::sleep(std::time::Duration::from_millis(1));

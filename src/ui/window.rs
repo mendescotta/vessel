@@ -18,15 +18,29 @@ pub fn build(app: &adw::Application) -> adw::ApplicationWindow {
         .default_height(720)
         .build();
 
-    let stack = gtk::Stack::builder().transition_type(gtk::StackTransitionType::Crossfade).build();
+    let stack = gtk::Stack::builder()
+        .transition_type(gtk::StackTransitionType::Crossfade)
+        .build();
     let index = Rc::new(Cell::new(0usize));
     let back = gtk::Button::builder().label("Back").build();
-    let next = gtk::Button::builder().label("Next").css_classes(["suggested-action"]).build();
+    let next = gtk::Button::builder()
+        .label("Next")
+        .css_classes(["suggested-action"])
+        .build();
 
     let refresh_nav: Rc<dyn Fn()> = {
-        let (stack, index, back, next, s) = (stack.clone(), index.clone(), back.clone(), next.clone(), s.clone());
+        let (stack, index, back, next, s) = (
+            stack.clone(),
+            index.clone(),
+            back.clone(),
+            next.clone(),
+            s.clone(),
+        );
         Rc::new(move || {
-            if let Some(i) = stack.visible_child_name().and_then(|n| ORDER.iter().position(|(name, _)| *name == n)) {
+            if let Some(i) = stack
+                .visible_child_name()
+                .and_then(|n| ORDER.iter().position(|(name, _)| *name == n))
+            {
                 index.set(i);
             }
             let i = index.get();
@@ -78,15 +92,27 @@ pub fn build(app: &adw::Application) -> adw::ApplicationWindow {
         });
     }
 
-    let sidebar = gtk::StackSidebar::builder().stack(&stack).vexpand(true).build();
+    let sidebar = gtk::StackSidebar::builder()
+        .stack(&stack)
+        .vexpand(true)
+        .build();
     let sidebar_view = adw::ToolbarView::new();
     sidebar_view.add_top_bar(&adw::HeaderBar::builder().show_title(false).build());
     sidebar_view.set_content(Some(&sidebar));
 
     let header = adw::HeaderBar::new();
-    let open_btn = gtk::Button::builder().icon_name("document-open-symbolic").tooltip_text("Open profile").build();
-    let save_btn = gtk::Button::builder().icon_name("document-save-symbolic").tooltip_text("Save profile").build();
-    let save_as_btn = gtk::Button::builder().icon_name("document-save-as-symbolic").tooltip_text("Save profile as…").build();
+    let open_btn = gtk::Button::builder()
+        .icon_name("document-open-symbolic")
+        .tooltip_text("Open profile")
+        .build();
+    let save_btn = gtk::Button::builder()
+        .icon_name("document-save-symbolic")
+        .tooltip_text("Save profile")
+        .build();
+    let save_as_btn = gtk::Button::builder()
+        .icon_name("document-save-as-symbolic")
+        .tooltip_text("Save profile as…")
+        .build();
     header.pack_start(&open_btn);
     header.pack_end(&save_as_btn);
     header.pack_end(&save_btn);
@@ -123,8 +149,18 @@ pub fn build(app: &adw::Application) -> adw::ApplicationWindow {
     content_view.add_bottom_bar(&bottom);
 
     let split = adw::NavigationSplitView::builder()
-        .sidebar(&adw::NavigationPage::builder().title("vessel").child(&sidebar_view).build())
-        .content(&adw::NavigationPage::builder().title("Profile").child(&content_view).build())
+        .sidebar(
+            &adw::NavigationPage::builder()
+                .title("vessel")
+                .child(&sidebar_view)
+                .build(),
+        )
+        .content(
+            &adw::NavigationPage::builder()
+                .title("Profile")
+                .child(&content_view)
+                .build(),
+        )
         .build();
     window.set_content(Some(&split));
     refresh_nav();

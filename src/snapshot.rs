@@ -34,7 +34,9 @@ impl HostProbe for RealHost {
 
     fn run(&self, cmd: &str, args: &[&str]) -> Option<String> {
         let out = Command::new(cmd).args(args).output().ok()?;
-        out.status.success().then(|| String::from_utf8_lossy(&out.stdout).into_owned())
+        out.status
+            .success()
+            .then(|| String::from_utf8_lossy(&out.stdout).into_owned())
     }
 }
 
@@ -47,7 +49,11 @@ pub fn snapshot_with(host: &dyn HostProbe, voidlab_repo: &str) -> (Profile, Vec<
     let mut p = Profile::new_default();
 
     let installed: Vec<String> = match host.run("xbps-query", &["-l"]) {
-        Some(out) => out.lines().filter_map(|l| l.split_whitespace().nth(1)).map(pkgname).collect(),
+        Some(out) => out
+            .lines()
+            .filter_map(|l| l.split_whitespace().nth(1))
+            .map(pkgname)
+            .collect(),
         None => {
             warnings.push("couldn't list installed packages (xbps-query -l failed)".into());
             Vec::new()
@@ -89,7 +95,11 @@ pub fn snapshot_with(host: &dyn HostProbe, voidlab_repo: &str) -> (Profile, Vec<
         ("budgie-desktop", Desktop::Budgie),
         ("kde-plasma", Desktop::Kde),
     ];
-    p.desktops = DESKTOP_METAS.iter().filter(|(pkg, _)| has(pkg)).map(|(_, d)| *d).collect();
+    p.desktops = DESKTOP_METAS
+        .iter()
+        .filter(|(pkg, _)| has(pkg))
+        .map(|(_, d)| *d)
+        .collect();
 
     const DMS: &[(&str, DisplayManager)] = &[
         ("lightdm", DisplayManager::Lightdm),
@@ -99,13 +109,20 @@ pub fn snapshot_with(host: &dyn HostProbe, voidlab_repo: &str) -> (Profile, Vec<
     ];
     if let Some((_, dm)) = DMS.iter().find(|(svc, _)| enabled.iter().any(|e| e == svc)) {
         if p.desktops.is_empty() {
-            warnings.push(format!("{} is enabled but no known desktop is installed; leaving it out", dm.label()));
+            warnings.push(format!(
+                "{} is enabled but no known desktop is installed; leaving it out",
+                dm.label()
+            ));
         } else {
             p.display_manager = *dm;
         }
     }
 
-    p.bootloaders = vec![if host.exists("/boot/grub") { Bootloader::Grub } else { Bootloader::Limine }];
+    p.bootloaders = vec![if host.exists("/boot/grub") {
+        Bootloader::Grub
+    } else {
+        Bootloader::Limine
+    }];
 
     read_repos(host, voidlab_repo, &mut p, &mut warnings);
     for preset in required_presets(&p) {
@@ -117,18 +134,32 @@ pub fn snapshot_with(host: &dyn HostProbe, voidlab_repo: &str) -> (Profile, Vec<
     match host.run("xbps-query", &["-m"]) {
         Some(out) => {
             let required = required_packages(&p);
-            p.packages.extra = out.lines().map(pkgname).filter(|n| !n.is_empty() && !required.contains(n)).collect();
+            p.packages.extra = out
+                .lines()
+                .map(pkgname)
+                .filter(|n| !n.is_empty() && !required.contains(n))
+                .collect();
         }
-        None => warnings.push("couldn't list manually installed packages (xbps-query -m failed)".into()),
+        None => {
+            warnings.push("couldn't list manually installed packages (xbps-query -m failed)".into())
+        }
     }
 
     let defaults = enabled_services(&p);
-    p.services.enable = enabled.into_iter().filter(|s| !defaults.contains(s)).collect();
+    p.services.enable = enabled
+        .into_iter()
+        .filter(|s| !defaults.contains(s))
+        .collect();
 
     (p, warnings)
 }
 
-fn read_repos(host: &dyn HostProbe, voidlab_repo: &str, p: &mut Profile, warnings: &mut Vec<String>) {
+fn read_repos(
+    host: &dyn HostProbe,
+    voidlab_repo: &str,
+    p: &mut Profile,
+    warnings: &mut Vec<String>,
+) {
     let mut files: BTreeMap<String, String> = BTreeMap::new();
     let mut any_dir = false;
     for dir in ["/usr/share/xbps.d", "/etc/xbps.d"] {
@@ -140,12 +171,19 @@ fn read_repos(host: &dyn HostProbe, voidlab_repo: &str, p: &mut Profile, warning
         }
     }
     if !any_dir {
-        warnings.push("couldn't read /etc/xbps.d or /usr/share/xbps.d; using the official repository only".into());
+        warnings.push(
+            "couldn't read /etc/xbps.d or /usr/share/xbps.d; using the official repository only"
+                .into(),
+        );
     }
     for path in files.values() {
-        let Some(text) = host.read(path) else { continue };
+        let Some(text) = host.read(path) else {
+            continue;
+        };
         for line in text.lines().map(str::trim).filter(|l| !l.starts_with('#')) {
-            let Some(url) = line.strip_prefix("repository=") else { continue };
+            let Some(url) = line.strip_prefix("repository=") else {
+                continue;
+            };
             let url = url.trim().trim_end_matches('/');
             match classify(url, voidlab_repo) {
                 Some(Some(preset)) => {
@@ -165,7 +203,8 @@ fn read_repos(host: &dyn HostProbe, voidlab_repo: &str, p: &mut Profile, warning
 }
 
 fn classify(url: &str, voidlab_repo: &str) -> Option<Option<RepoPreset>> {
-    if url == voidlab_repo.trim_end_matches('/') || url.ends_with("/Projects/voidlab/voidlab/repo") {
+    if url == voidlab_repo.trim_end_matches('/') || url.ends_with("/Projects/voidlab/voidlab/repo")
+    {
         return Some(Some(RepoPreset::Voidlab));
     }
     if url.ends_with("/current") {

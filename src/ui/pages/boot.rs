@@ -12,7 +12,9 @@ pub fn build(s: &Shared) -> gtk::Widget {
     );
     page.add(&issues_group(s, &["bootloaders"]));
 
-    let loaders = adw::PreferencesGroup::builder().title("Bootloaders").build();
+    let loaders = adw::PreferencesGroup::builder()
+        .title("Bootloaders")
+        .build();
     for b in Bootloader::ALL.iter().copied() {
         let roles = match (b.bios(), b.uefi()) {
             (true, true) => "BIOS and UEFI",
@@ -51,6 +53,10 @@ pub fn build(s: &Shared) -> gtk::Widget {
 fn coverage_text(p: &Profile) -> String {
     let fw = firmware_owners(p);
     let name = |b: Option<Bootloader>| b.map(|b| b.label()).unwrap_or("none");
-    let bios = if p.uefi_only { "skipped".to_string() } else { name(fw.bios).to_string() };
+    let bios = if p.uefi_only {
+        "skipped".to_string()
+    } else {
+        name(fw.bios).to_string()
+    };
     format!("BIOS: {bios} · UEFI: {}", name(fw.uefi))
 }

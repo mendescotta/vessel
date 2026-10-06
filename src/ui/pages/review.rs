@@ -5,7 +5,10 @@ use crate::generate::generate;
 use crate::ui::state::{self, Shared};
 
 pub fn build(s: &Shared) -> gtk::Widget {
-    let page = page("Review", "Everything that needs attention, and the build script this profile generates.");
+    let page = page(
+        "Review",
+        "Everything that needs attention, and the build script this profile generates.",
+    );
     page.add(&issues_group(s, &[]));
 
     let group = adw::PreferencesGroup::builder().title("build.sh").build();
@@ -18,7 +21,11 @@ pub fn build(s: &Shared) -> gtk::Widget {
         .left_margin(8)
         .right_margin(8)
         .build();
-    let scroller = gtk::ScrolledWindow::builder().min_content_height(420).child(&view).css_classes(["card"]).build();
+    let scroller = gtk::ScrolledWindow::builder()
+        .min_content_height(420)
+        .child(&view)
+        .css_classes(["card"])
+        .build();
     group.add(&scroller);
     page.add(&group);
 

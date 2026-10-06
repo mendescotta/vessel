@@ -1,44 +1,28 @@
 # vessel
 
-A GTK4/libadwaita app that composes a Void Linux live ISO from a profile
-(init system, userland, bootloaders, desktops, display manager, repositories,
-packages) and generates a standalone `build.sh`. The script needs neither
-vessel nor a void-mklive checkout to run. vessel can also run it for you
-through pkexec, streaming the log.
+Compose a Void Linux live ISO from a TOML profile. vessel generates a standalone `build.sh`
+(no vessel or void-mklive needed to run it); the GTK4 app is an editor, with a profile also
+usable from the command line.
 
-Profiles can be built from scratch, or seeded from the running system
-(Start page → snapshot) and edited from there.
+```
+vessel --generate profile.toml --out <dir>
+cd <dir> && sudo ./build.sh        # ISO lands in out/<name>-<YYYYMMDD>.iso
+```
 
-## Axes
-
-| Field | Values |
-|---|---|
-| `init` | `runit`, `dinit` (older `dinit-chimera` / `dinit-noid` still load) |
-| `userland` | `gnu`, `chimerautils` (shown as "bsdutils" in the UI) |
-| `bootloaders` | any of `grub`, `limine`, `refind` (refind is UEFI only) |
-| `desktops` | any of `gnome`, `cosmic`, `cinnamon`, `xfce`, `budgie`, `kde`; empty = console |
-| `display_manager` | `none`, `lightdm`, `sddm`, `gdm`, `cosmic-greeter` |
-| `repos.presets` | `voidlab`, `nonfree`, `multilib` (an old `noid` entry is ignored) |
-
-Some bootloader must cover UEFI, and BIOS too unless `uefi_only = true`.
-Validation runs on every edit; the Review page lists errors and warnings and
-previews the generated script.
-
-## Profile format
+## Profile
 
 ```toml
 version = 1
 name = "dinit-base"
-arch = "x86_64"
-init = "dinit"
-userland = "chimerautils"
-bootloaders = ["grub"]
-desktops = []
-display_manager = "none"
+init = "dinit"                  # runit | dinit
+userland = "chimerautils"       # gnu | chimerautils
+bootloaders = ["grub"]          # grub | limine | refind (refind: UEFI only)
+desktops = []                   # gnome cosmic cinnamon xfce budgie kde; empty = console
+display_manager = "none"        # none lightdm sddm gdm cosmic-greeter
 
 [repos]
-presets = ["voidlab"]
-custom = []              # extra repository URLs or paths
+presets = ["voidlab"]           # voidlab nonfree multilib
+custom = []
 
 [packages]
 extra = []
@@ -47,68 +31,25 @@ exclude = []
 [services]
 enable = []
 disable = []
-
-[live]
-hostname = "void-live"
-user = "anon"
 ```
 
-Everything except `version`, `name`, `init`, `userland` and `bootloaders` has
-a default. Optional `overlay_dir` (copied over the rootfs) and
-`post_rootfs_hook` (run chrooted in the rootfs) are relative to the profile
-file. Working examples are in `examples/`.
+Optional `overlay_dir` (copied over the rootfs) and `post_rootfs_hook` (run in the rootfs chroot) are
+relative to the profile. Examples are in `examples/`. The `voidlab` preset is the
+[voidlab](https://github.com/mendescotta/voidlab) binary repository; point it elsewhere with
+`VESSEL_VOIDLAB_REPO` (a path or URL). `WORK` and `OUT` override the script's scratch and output folders.
 
-## Output folder
-
-Save writes to `~/vessel/<name>` (or a folder you pick):
-
-- `profile.toml`: the profile, reloadable in vessel
-- `build.sh`: the generated script
-- `vmklive/`: the dracut live module (from void-mklive's dracut/vmklive module as modified in noid-mklive; license in `vmklive/COPYING`)
-- overlay and hook, when the profile uses them
-
-Saving again over the same folder replaces these files cleanly.
-
-## Running
-
-A profile can also be turned into a script without the GUI:
+## Build
 
 ```
-vessel --generate profile.toml --out <dir>
+cargo build --release && cargo test
 ```
 
+x86_64 glibc only. No musl, disk images or package builds.
 
-```
-cd ~/vessel/<name>
-sudo ./build.sh            # ISO lands in out/<name>-<YYYYMMDD>.iso
-```
+## References
 
-`WORK` and `OUT` override the scratch (`work/`) and output (`out/`) folders.
-The script only wipes a scratch folder it created itself (it leaves a
-`.vessel-work` marker), so a non-empty `WORK` without the marker is refused.
-The script checks for its host tools first and names the package for each
-missing one (xbps, dracut, squashfs-tools, xorriso, grub/limine/refind,
-mtools, dosfstools, e2fsprogs).
+- [void-mklive](https://github.com/void-linux/void-mklive): the Void live-ISO tooling the generated script follows; the `vmklive` dracut module in `assets/vmklive/` comes from it (license in `assets/vmklive/COPYING`).
+- [dinit-chimera](https://github.com/chimera-linux/dinit-chimera) and [Chimera Linux](https://chimera-linux.org/): the dinit service suite and chimerautils userland the `dinit` and `chimerautils` options build on.
+- [Void Linux](https://voidlinux.org/) and [xbps](https://github.com/void-linux/xbps).
 
-"Build now" in the app runs the same thing through
-`pkexec /usr/libexec/vessel/run-build <folder>`. Install that launcher and
-its polkit policy once:
-
-```
-sudo ./packaging/install.sh                # or --uninstall
-```
-
-## Building vessel
-
-```
-cargo build --release
-cargo test
-```
-
-## Limitations
-
-- x86_64 glibc only; the `arch` field exists for later.
-- No musl, no disk images, no package builds (build packages with voidlab).
-- No headless CLI; generate scripts from the app.
-- Boot tested so far: the generated scripts are checked by golden tests and
-  `bash -n`. ISO boots in QEMU are not recorded yet.
+Licensed under GPL-3.0-or-later.

@@ -1,12 +1,22 @@
 use super::*;
-use crate::profile::{Bootloader as B, Desktop, DisplayManager as Dm, Init, Profile, RepoPreset, Userland};
+use crate::profile::{
+    Bootloader as B, Desktop, DisplayManager as Dm, Init, Profile, RepoPreset, Userland,
+};
 
 fn errors(p: &Profile) -> Vec<Issue> {
-    validate(p).0.into_iter().filter(|i| i.severity == Severity::Error).collect()
+    validate(p)
+        .0
+        .into_iter()
+        .filter(|i| i.severity == Severity::Error)
+        .collect()
 }
 
 fn warnings(p: &Profile) -> Vec<Issue> {
-    validate(p).0.into_iter().filter(|i| i.severity == Severity::Warning).collect()
+    validate(p)
+        .0
+        .into_iter()
+        .filter(|i| i.severity == Severity::Warning)
+        .collect()
 }
 
 fn has_error(p: &Profile, field: &str) -> bool {
@@ -67,7 +77,9 @@ fn limine_then_refind_warns_refind_unused() {
     let mut p = Profile::new_default();
     p.bootloaders = vec![B::Limine, B::Refind];
     assert!(errors(&p).is_empty());
-    assert!(warnings(&p).iter().any(|i| i.field == "bootloaders" && i.message.contains("rEFInd")));
+    assert!(warnings(&p)
+        .iter()
+        .any(|i| i.field == "bootloaders" && i.message.contains("rEFInd")));
 }
 
 #[test]
@@ -101,7 +113,10 @@ fn display_manager_rules() {
     p.display_manager = Dm::Gdm;
     assert!(has_error(&p, "display_manager"), "gdm without gnome");
     p.display_manager = Dm::CosmicGreeter;
-    assert!(has_error(&p, "display_manager"), "cosmic-greeter without cosmic");
+    assert!(
+        has_error(&p, "display_manager"),
+        "cosmic-greeter without cosmic"
+    );
 
     p.display_manager = Dm::None;
     assert!(!has_error(&p, "display_manager"));
@@ -200,7 +215,10 @@ fn examples_validate() {
     for name in ["dinit-base.toml"] {
         let p = Profile::load(&dir.join(name)).unwrap_or_else(|e| panic!("{name}: {e}"));
         let (issues, valid) = validate(&p);
-        let errors: Vec<_> = issues.iter().filter(|i| i.severity == Severity::Error).collect();
+        let errors: Vec<_> = issues
+            .iter()
+            .filter(|i| i.severity == Severity::Error)
+            .collect();
         assert!(errors.is_empty(), "{name}: {errors:?}");
         assert!(valid.is_some(), "{name}");
     }

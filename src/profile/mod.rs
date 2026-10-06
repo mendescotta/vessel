@@ -128,7 +128,10 @@ impl fmt::Display for ProfileError {
             Self::Io(e) => write!(f, "could not read profile: {e}"),
             Self::Parse(m) => write!(f, "invalid profile: {m}"),
             Self::Version(v) => {
-                write!(f, "unsupported profile version {v} (this vessel reads version {PROFILE_VERSION})")
+                write!(
+                    f,
+                    "unsupported profile version {v} (this vessel reads version {PROFILE_VERSION})"
+                )
             }
         }
     }
@@ -157,11 +160,15 @@ impl Profile {
     }
 
     pub fn from_toml(s: &str) -> Result<Self, ProfileError> {
-        let value: toml::Table = s.parse().map_err(|e: toml::de::Error| ProfileError::Parse(e.to_string()))?;
+        let value: toml::Table = s
+            .parse()
+            .map_err(|e: toml::de::Error| ProfileError::Parse(e.to_string()))?;
         match value.get("version") {
             None => return Err(ProfileError::Parse("missing `version`".into())),
             Some(toml::Value::Integer(v)) if *v == i64::from(PROFILE_VERSION) => {}
-            Some(toml::Value::Integer(v)) => return Err(ProfileError::Version(u32::try_from(*v).unwrap_or(u32::MAX))),
+            Some(toml::Value::Integer(v)) => {
+                return Err(ProfileError::Version(u32::try_from(*v).unwrap_or(u32::MAX)))
+            }
             Some(_) => return Err(ProfileError::Parse("`version` must be an integer".into())),
         }
         toml::from_str(s).map_err(|e| ProfileError::Parse(e.to_string()))
@@ -175,7 +182,10 @@ impl Profile {
         let text = std::fs::read_to_string(path).map_err(ProfileError::Io)?;
         let mut profile = Self::from_toml(&text)?;
         let base = path.parent().unwrap_or(Path::new("."));
-        for p in [&mut profile.overlay_dir, &mut profile.post_rootfs_hook].into_iter().flatten() {
+        for p in [&mut profile.overlay_dir, &mut profile.post_rootfs_hook]
+            .into_iter()
+            .flatten()
+        {
             if p.is_relative() {
                 *p = base.join(&*p);
             }

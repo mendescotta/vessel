@@ -2,13 +2,18 @@ use crate::profile::{Profile, RepoPreset};
 
 pub const OFFICIAL: &str = "https://repo-default.voidlinux.org/current";
 
+/// The public voidlab binary repository, used when `VESSEL_VOIDLAB_REPO` is not set.
+pub const VOIDLAB_RELEASE_REPO: &str =
+    "https://github.com/mendescotta/voidlab/releases/download/repo";
+
+/// Where the `voidlab` repository preset points: `VESSEL_VOIDLAB_REPO` (a path or URL) or the public repository.
 pub fn voidlab_repo_path() -> String {
-    voidlab_repo_path_from(std::env::var("VESSEL_VOIDLAB_REPO").ok(), std::env::var("HOME").ok())
+    voidlab_repo_path_from(std::env::var("VESSEL_VOIDLAB_REPO").ok())
 }
 
-pub fn voidlab_repo_path_from(env: Option<String>, home: Option<String>) -> String {
+pub fn voidlab_repo_path_from(env: Option<String>) -> String {
     env.filter(|s| !s.is_empty())
-        .unwrap_or_else(|| format!("{}/Projects/voidlab/voidlab/repo", home.unwrap_or_default()))
+        .unwrap_or_else(|| VOIDLAB_RELEASE_REPO.to_string())
 }
 
 pub fn preset_urls(preset: RepoPreset, all: &[RepoPreset], voidlab: &str) -> Vec<String> {

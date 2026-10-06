@@ -17,12 +17,17 @@ fn toml_filter() -> gio::ListStore {
 }
 
 pub fn open_profile(s: &Shared, parent: &impl IsA<gtk::Widget>, then: impl Fn() + 'static) {
-    let dialog = gtk::FileDialog::builder().title("Open profile").filters(&toml_filter()).build();
+    let dialog = gtk::FileDialog::builder()
+        .title("Open profile")
+        .filters(&toml_filter())
+        .build();
     let window = parent.root().and_downcast::<gtk::Window>();
     let s = s.clone();
     let parent = parent.clone().upcast::<gtk::Widget>();
     dialog.open(window.as_ref(), gio::Cancellable::NONE, move |res| {
-        let Some(path) = res.ok().and_then(|f| f.path()) else { return };
+        let Some(path) = res.ok().and_then(|f| f.path()) else {
+            return;
+        };
         match Profile::load(&path) {
             Ok(p) => {
                 state::replace(&s, p);

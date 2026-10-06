@@ -72,11 +72,18 @@ fn load_resolves_relative_paths_against_profile_dir() {
     let dir = std::env::temp_dir().join(format!("vessel-profile-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("p.toml");
-    std::fs::write(&path, format!("{MINIMAL}overlay_dir = \"ov\"\npost_rootfs_hook = \"/abs/hook.sh\"\n")).unwrap();
+    std::fs::write(
+        &path,
+        format!("{MINIMAL}overlay_dir = \"ov\"\npost_rootfs_hook = \"/abs/hook.sh\"\n"),
+    )
+    .unwrap();
     let p = Profile::load(&path).unwrap();
     std::fs::remove_dir_all(&dir).ok();
     assert_eq!(p.overlay_dir, Some(dir.join("ov")));
-    assert_eq!(p.post_rootfs_hook, Some(std::path::PathBuf::from("/abs/hook.sh")));
+    assert_eq!(
+        p.post_rootfs_hook,
+        Some(std::path::PathBuf::from("/abs/hook.sh"))
+    );
 }
 
 #[test]

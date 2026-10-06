@@ -25,7 +25,13 @@ pub type Shared = Rc<RefCell<AppState>>;
 
 pub fn new_shared(profile: Profile) -> Shared {
     let (issues, valid) = validate(&profile);
-    Rc::new(RefCell::new(AppState { profile, issues, valid, profile_path: None, listeners: Vec::new() }))
+    Rc::new(RefCell::new(AppState {
+        profile,
+        issues,
+        valid,
+        profile_path: None,
+        listeners: Vec::new(),
+    }))
 }
 
 pub fn on_change(s: &Shared, f: impl Fn(&Profile, &[Issue], Change) + 'static) {

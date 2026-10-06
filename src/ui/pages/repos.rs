@@ -10,13 +10,24 @@ pub fn build(s: &Shared) -> gtk::Widget {
         "Repositories & packages",
         "Where packages come from, what goes on the ISO beyond the chosen components, and files to layer on top.",
     );
-    page.add(&issues_group(s, &["repos", "packages", "services", "overlay_dir", "post_rootfs_hook"]));
+    page.add(&issues_group(
+        s,
+        &[
+            "repos",
+            "packages",
+            "services",
+            "overlay_dir",
+            "post_rootfs_hook",
+        ],
+    ));
 
     let presets = adw::PreferencesGroup::builder()
         .title("Repositories")
         .description("The official Void repository is always used, after these.")
         .build();
-    let fix = adw::ActionRow::builder().title("The chosen init or userland needs more repositories").build();
+    let fix = adw::ActionRow::builder()
+        .title("The chosen init or userland needs more repositories")
+        .build();
     let fix_btn = gtk::Button::builder()
         .label("Add required")
         .valign(gtk::Align::Center)
@@ -36,7 +47,13 @@ pub fn build(s: &Shared) -> gtk::Widget {
     }
     let refresh_fix = {
         let fix = fix.clone();
-        move |p: &crate::profile::Profile| fix.set_visible(required_presets(p).iter().any(|r| !p.repos.presets.contains(r)))
+        move |p: &crate::profile::Profile| {
+            fix.set_visible(
+                required_presets(p)
+                    .iter()
+                    .any(|r| !p.repos.presets.contains(r)),
+            )
+        }
     };
     refresh_fix(&s.borrow().profile);
     state::on_change(s, move |p, _, _| refresh_fix(p));
@@ -93,9 +110,23 @@ pub fn build(s: &Shared) -> gtk::Widget {
         false,
     ));
 
-    let files = adw::PreferencesGroup::builder().title("Customisation").build();
-    files.add(&path_row(s, "Overlay folder", true, |p| p.overlay_dir.clone(), |p, v| p.overlay_dir = v));
-    files.add(&path_row(s, "Post-rootfs hook script", false, |p| p.post_rootfs_hook.clone(), |p, v| p.post_rootfs_hook = v));
+    let files = adw::PreferencesGroup::builder()
+        .title("Customisation")
+        .build();
+    files.add(&path_row(
+        s,
+        "Overlay folder",
+        true,
+        |p| p.overlay_dir.clone(),
+        |p, v| p.overlay_dir = v,
+    ));
+    files.add(&path_row(
+        s,
+        "Post-rootfs hook script",
+        false,
+        |p| p.post_rootfs_hook.clone(),
+        |p, v| p.post_rootfs_hook = v,
+    ));
     page.add(&files);
 
     page.upcast()

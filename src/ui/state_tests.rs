@@ -8,7 +8,9 @@ fn update_revalidates_and_notifies_edit() {
     let s = new_shared(Profile::new_default());
     let seen: Rc<RefCell<Vec<(Change, usize)>>> = Rc::default();
     let seen2 = seen.clone();
-    on_change(&s, move |_, issues, change| seen2.borrow_mut().push((change, issues.len())));
+    on_change(&s, move |_, issues, change| {
+        seen2.borrow_mut().push((change, issues.len()))
+    });
     update(&s, |p| p.bootloaders.clear());
     assert_eq!(*seen.borrow(), vec![(Change::Edit, 1)]);
     assert!(s.borrow().valid.is_some());

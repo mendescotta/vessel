@@ -35,15 +35,22 @@ fn voidlab_preset_uses_given_path_and_dedups() {
     let mut p = Profile::new_default();
     p.repos.presets = vec![RepoPreset::Voidlab];
     p.repos.custom = vec!["/vl/repo".into()];
-    assert_eq!(repos::repo_list_with(&p, "/vl/repo"), vec!["/vl/repo".to_string(), repos::OFFICIAL.to_string()]);
+    assert_eq!(
+        repos::repo_list_with(&p, "/vl/repo"),
+        vec!["/vl/repo".to_string(), repos::OFFICIAL.to_string()]
+    );
 }
 
 #[test]
-fn voidlab_path_prefers_env_then_home() {
-    assert_eq!(repos::voidlab_repo_path_from(Some("/x".into()), Some("/home/u".into())), "/x");
+fn voidlab_path_prefers_env_then_the_public_repo() {
+    assert_eq!(repos::voidlab_repo_path_from(Some("/x".into())), "/x");
     assert_eq!(
-        repos::voidlab_repo_path_from(None, Some("/home/u".into())),
-        "/home/u/Projects/voidlab/voidlab/repo"
+        repos::voidlab_repo_path_from(None),
+        repos::VOIDLAB_RELEASE_REPO
+    );
+    assert_eq!(
+        repos::voidlab_repo_path_from(Some(String::new())),
+        repos::VOIDLAB_RELEASE_REPO
     );
 }
 
@@ -55,7 +62,17 @@ fn required_packages_dinit_chimera_gnome_lightdm() {
     p.desktops = vec![Desktop::Gnome];
     p.display_manager = Dm::Lightdm;
     let pkgs = required_packages(&p);
-    for want in ["linux", "base-system-dinit", "dinit-void", "dracut", "chimerautils", "gnome", "lightdm", "lightdm-gtk3-greeter", "dbus"] {
+    for want in [
+        "linux",
+        "base-system-dinit",
+        "dinit-void",
+        "dracut",
+        "chimerautils",
+        "gnome",
+        "lightdm",
+        "lightdm-gtk3-greeter",
+        "dbus",
+    ] {
         assert_eq!(count(&pkgs, want), 1, "{want} in {pkgs:?}");
     }
     assert!(!pkgs.contains(&"base-system".to_string()));
@@ -96,11 +113,17 @@ fn services_union_dedup_and_disable() {
 #[test]
 fn graphical_profiles_do_not_also_run_dhcpcd() {
     let mut p = Profile::new_default();
-    assert!(enabled_services(&p).contains(&"dhcpcd".to_string()), "console profiles keep dhcpcd");
+    assert!(
+        enabled_services(&p).contains(&"dhcpcd".to_string()),
+        "console profiles keep dhcpcd"
+    );
     p.desktops = vec![Desktop::Xfce];
     let s = enabled_services(&p);
     assert!(s.contains(&"NetworkManager".to_string()));
-    assert!(!s.contains(&"dhcpcd".to_string()), "NetworkManager already does DHCP: {s:?}");
+    assert!(
+        !s.contains(&"dhcpcd".to_string()),
+        "NetworkManager already does DHCP: {s:?}"
+    );
 }
 
 #[test]
@@ -116,7 +139,9 @@ fn validate_rejects_excluding_required_package() {
     p.packages.exclude = vec!["base-system".into()];
     let (issues, valid) = crate::profile::validate::validate(&p);
     assert!(valid.is_none());
-    assert!(issues.iter().any(|i| i.field == "packages" && i.message.contains("base-system")));
+    assert!(issues
+        .iter()
+        .any(|i| i.field == "packages" && i.message.contains("base-system")));
 }
 
 #[test]

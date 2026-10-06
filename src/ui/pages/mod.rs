@@ -38,7 +38,10 @@ pub const ORDER: &[(&str, &str)] = &[
 
 pub fn issues_group(s: &Shared, fields: &'static [&'static str]) -> adw::PreferencesGroup {
     let group = adw::PreferencesGroup::new();
-    let list = gtk::Box::builder().orientation(gtk::Orientation::Vertical).spacing(4).build();
+    let list = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
+        .spacing(4)
+        .build();
     group.add(&list);
 
     let render = {
@@ -49,7 +52,10 @@ pub fn issues_group(s: &Shared, fields: &'static [&'static str]) -> adw::Prefere
                 list.remove(&child);
             }
             let mut any = false;
-            for issue in issues.iter().filter(|i| fields.is_empty() || fields.contains(&i.field)) {
+            for issue in issues
+                .iter()
+                .filter(|i| fields.is_empty() || fields.contains(&i.field))
+            {
                 any = true;
                 let (icon, class) = match issue.severity {
                     Severity::Error => ("dialog-error-symbolic", "error"),
@@ -57,7 +63,13 @@ pub fn issues_group(s: &Shared, fields: &'static [&'static str]) -> adw::Prefere
                 };
                 let row = gtk::Box::builder().spacing(8).build();
                 row.append(&gtk::Image::from_icon_name(icon));
-                row.append(&gtk::Label::builder().label(&issue.message).wrap(true).xalign(0.0).build());
+                row.append(
+                    &gtk::Label::builder()
+                        .label(&issue.message)
+                        .wrap(true)
+                        .xalign(0.0)
+                        .build(),
+                );
                 row.add_css_class(class);
                 list.append(&row);
             }
@@ -78,7 +90,10 @@ pub fn enum_row<T: Copy + PartialEq + 'static>(
     set: fn(&mut Profile, T),
 ) -> adw::ComboRow {
     let labels: Vec<&str> = all.iter().map(|v| label(*v)).collect();
-    let row = adw::ComboRow::builder().title(title).model(&gtk::StringList::new(&labels)).build();
+    let row = adw::ComboRow::builder()
+        .title(title)
+        .model(&gtk::StringList::new(&labels))
+        .build();
     let index_of = move |v: T| all.iter().position(|x| *x == v).unwrap_or(0) as u32;
     row.set_selected(index_of(get(&s.borrow().profile)));
 
@@ -98,8 +113,16 @@ pub fn enum_row<T: Copy + PartialEq + 'static>(
     row
 }
 
-pub fn text_row(s: &Shared, title: &str, get: fn(&Profile) -> String, set: fn(&mut Profile, String)) -> adw::EntryRow {
-    let row = adw::EntryRow::builder().title(title).text(get(&s.borrow().profile)).build();
+pub fn text_row(
+    s: &Shared,
+    title: &str,
+    get: fn(&Profile) -> String,
+    set: fn(&mut Profile, String),
+) -> adw::EntryRow {
+    let row = adw::EntryRow::builder()
+        .title(title)
+        .text(get(&s.borrow().profile))
+        .build();
     let s2 = s.clone();
     row.connect_changed(move |row| {
         let text = row.text().to_string();
@@ -161,7 +184,10 @@ pub fn page(title: &str, description: &str) -> adw::PreferencesPage {
 }
 
 pub fn show_error(widget: &impl IsA<gtk::Widget>, heading: &str, body: &str) {
-    let dialog = adw::AlertDialog::builder().heading(heading).body(body).build();
+    let dialog = adw::AlertDialog::builder()
+        .heading(heading)
+        .body(body)
+        .build();
     dialog.add_response("ok", "OK");
     dialog.present(Some(widget));
 }
@@ -179,8 +205,14 @@ pub fn list_group(
 
     use crate::backend::packages::{package_exists, PackageCheck};
 
-    let group = adw::PreferencesGroup::builder().title(title).description(description).build();
-    let add = adw::EntryRow::builder().title("Add…").show_apply_button(true).build();
+    let group = adw::PreferencesGroup::builder()
+        .title(title)
+        .description(description)
+        .build();
+    let add = adw::EntryRow::builder()
+        .title("Add…")
+        .show_apply_button(true)
+        .build();
     group.add(&add);
 
     let rows: Rc<RefCell<Vec<adw::ActionRow>>> = Rc::default();
@@ -188,7 +220,13 @@ pub fn list_group(
     let lookups: Rc<RefCell<HashMap<String, PackageCheck>>> = Rc::default();
 
     let render: Rc<dyn Fn(&Profile)> = {
-        let (group, rows, rendered, lookups, s) = (group.clone(), rows.clone(), rendered.clone(), lookups.clone(), s.clone());
+        let (group, rows, rendered, lookups, s) = (
+            group.clone(),
+            rows.clone(),
+            rendered.clone(),
+            lookups.clone(),
+            s.clone(),
+        );
         Rc::new(move |p: &Profile| {
             let items = get(p);
             if *rendered.borrow() == *items {
@@ -204,7 +242,8 @@ pub fn list_group(
                 if check_packages {
                     flag(&status, lookups.borrow().get(item));
                     if !lookups.borrow().contains_key(item) {
-                        let (name, lookups, status) = (item.clone(), lookups.clone(), status.clone());
+                        let (name, lookups, status) =
+                            (item.clone(), lookups.clone(), status.clone());
                         glib::spawn_future_local(async move {
                             let lookup = name.clone();
                             let result = gio::spawn_blocking(move || package_exists(&lookup)).await;
@@ -222,7 +261,9 @@ pub fn list_group(
                     .tooltip_text("Remove")
                     .build();
                 let (s, name) = (s.clone(), item.clone());
-                remove.connect_clicked(move |_| state::update(&s, |p| get_mut(p).retain(|x| *x != name)));
+                remove.connect_clicked(move |_| {
+                    state::update(&s, |p| get_mut(p).retain(|x| *x != name))
+                });
                 row.add_suffix(&remove);
                 group.add(&row);
                 rows.borrow_mut().push(row);
@@ -270,10 +311,17 @@ pub fn path_row(
     set: fn(&mut Profile, Option<std::path::PathBuf>),
 ) -> adw::ActionRow {
     let row = adw::ActionRow::builder().title(title).build();
-    let subtitle = move |p: &Profile| get(p).map(|x| x.display().to_string()).unwrap_or_else(|| "None".into());
+    let subtitle = move |p: &Profile| {
+        get(p)
+            .map(|x| x.display().to_string())
+            .unwrap_or_else(|| "None".into())
+    };
     row.set_subtitle(&subtitle(&s.borrow().profile));
 
-    let choose = gtk::Button::builder().label("Choose…").valign(gtk::Align::Center).build();
+    let choose = gtk::Button::builder()
+        .label("Choose…")
+        .valign(gtk::Align::Center)
+        .build();
     let clear = gtk::Button::builder()
         .icon_name("edit-clear-symbolic")
         .valign(gtk::Align::Center)
