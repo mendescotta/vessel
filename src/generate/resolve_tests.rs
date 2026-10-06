@@ -94,6 +94,16 @@ fn services_union_dedup_and_disable() {
 }
 
 #[test]
+fn graphical_profiles_do_not_also_run_dhcpcd() {
+    let mut p = Profile::new_default();
+    assert!(enabled_services(&p).contains(&"dhcpcd".to_string()), "console profiles keep dhcpcd");
+    p.desktops = vec![Desktop::Xfce];
+    let s = enabled_services(&p);
+    assert!(s.contains(&"NetworkManager".to_string()));
+    assert!(!s.contains(&"dhcpcd".to_string()), "NetworkManager already does DHCP: {s:?}");
+}
+
+#[test]
 fn ignored_packages_are_the_excludes() {
     let mut p = Profile::new_default();
     p.packages.exclude = vec!["nano".into()];

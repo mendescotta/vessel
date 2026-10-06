@@ -62,7 +62,13 @@ pub fn enabled_services(p: &Profile) -> Vec<String> {
     }
     out.extend(desktop::dm_service(p.display_manager).map(String::from));
     out.extend(p.services.enable.iter().cloned());
-    dedup(out).into_iter().filter(|s| !p.services.disable.contains(s)).collect()
+    // NetworkManager (graphical profiles) runs its own DHCP; a second DHCP client on the
+    // same interface makes it report "not connected" while the network works.
+    let graphical = !p.desktops.is_empty();
+    dedup(out)
+        .into_iter()
+        .filter(|s| !p.services.disable.contains(s) && !(graphical && s == "dhcpcd"))
+        .collect()
 }
 
 #[cfg(test)]

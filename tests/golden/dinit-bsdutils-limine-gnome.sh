@@ -141,7 +141,6 @@ disable_service() {
 }
 enable_service 'agetty-tty1'
 enable_service 'agetty-tty2'
-enable_service 'dhcpcd'
 enable_service 'dbus'
 enable_service 'elogind'
 enable_service 'NetworkManager'
