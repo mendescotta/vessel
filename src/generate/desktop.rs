@@ -20,7 +20,7 @@ pub fn desktop_packages(d: Desktop) -> &'static [&'static str] {
         Desktop::Gnome => &["gnome"],
         Desktop::Cosmic => &["cosmic-desktop"],
         Desktop::Cinnamon => &["cinnamon"],
-        Desktop::Xfce => &["xfce4"],
+        Desktop::Xfce => &["xfce-core"],
         Desktop::Budgie => &["budgie-desktop"],
         Desktop::Kde => &["kde-plasma"],
     }

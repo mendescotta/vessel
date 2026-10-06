@@ -55,7 +55,7 @@ fn required_packages_dinit_chimera_gnome_lightdm() {
     p.desktops = vec![Desktop::Gnome];
     p.display_manager = Dm::Lightdm;
     let pkgs = required_packages(&p);
-    for want in ["linux", "base-system-dinit", "dinit-chimera", "dinit-void", "dracut", "chimerautils", "gnome", "lightdm", "lightdm-gtk3-greeter", "dbus"] {
+    for want in ["linux", "base-system-dinit", "dinit-void", "dracut", "chimerautils", "gnome", "lightdm", "lightdm-gtk3-greeter", "dbus"] {
         assert_eq!(count(&pkgs, want), 1, "{want} in {pkgs:?}");
     }
     assert!(!pkgs.contains(&"base-system".to_string()));

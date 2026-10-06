@@ -3,7 +3,7 @@ use crate::profile::Init;
 pub fn base_packages(i: Init) -> &'static [&'static str] {
     match i {
         Init::Runit => &["base-system"],
-        Init::Dinit => &["base-system-dinit", "dinit-chimera", "dinit-void"],
+        Init::Dinit => &["base-system-dinit", "dinit-void"],
     }
 }
 

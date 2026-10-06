@@ -114,9 +114,9 @@ touch "$WORK/.vessel-work"
 VOID_KEY="60:ae:0c:d6:f0:95:17:80:bc:93:46:7a:89:af:a3:2d"
 [ -f "/var/db/xbps/keys/$VOID_KEY.plist" ] || die "official Void signing key $VOID_KEY not in /var/db/xbps/keys; run xbps-install -S once on this host"
 cp -a "/var/db/xbps/keys/$VOID_KEY.plist" "$ROOTFS/var/db/xbps/keys/"
-info "Installing 24 packages into $ROOTFS"
+info "Installing 23 packages into $ROOTFS"
 XBPS_ARCH="$ARCH" xbps-install -S -y -r "$ROOTFS" -C "$ROOTFS/etc/xbps.d" "${REPO_ARGS[@]}" \
-	'linux' 'base-system-dinit' 'dinit-chimera' 'dinit-void' 'dracut' 'binutils' 'xz' 'device-mapper' 'dhclient' 'dracut-network' 'openresolv' 'dbus' 'elogind' 'polkit' 'NetworkManager' 'xorg-minimal' 'xorg-fonts' 'mesa-dri' 'pipewire' 'wireplumber' 'xdg-user-dirs' 'xfce4' 'lightdm' 'lightdm-gtk3-greeter'
+	'linux' 'base-system-dinit' 'dinit-void' 'dracut' 'binutils' 'xz' 'device-mapper' 'dhclient' 'dracut-network' 'openresolv' 'dbus' 'elogind' 'polkit' 'NetworkManager' 'xorg-minimal' 'xorg-fonts' 'mesa-dri' 'pipewire' 'wireplumber' 'xdg-user-dirs' 'xfce-core' 'lightdm' 'lightdm-gtk3-greeter'
 mount_chroot
 cp /etc/resolv.conf "$ROOTFS/etc/resolv.conf"
 chroot "$ROOTFS" xbps-reconfigure -fa

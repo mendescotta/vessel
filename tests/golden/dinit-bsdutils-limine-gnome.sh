@@ -107,9 +107,9 @@ cp -a "/var/db/xbps/keys/$VOID_KEY.plist" "$ROOTFS/var/db/xbps/keys/"
 cat > "$ROOTFS/etc/xbps.d/00-vessel.conf" <<'VESSEL_IGNORE'
 ignorepkg=nano
 VESSEL_IGNORE
-info "Installing 26 packages into $ROOTFS"
+info "Installing 25 packages into $ROOTFS"
 XBPS_ARCH="$ARCH" xbps-install -S -y -r "$ROOTFS" -C "$ROOTFS/etc/xbps.d" "${REPO_ARGS[@]}" \
-	'linux' 'base-system-dinit' 'dinit-chimera' 'dinit-void' 'dracut' 'binutils' 'xz' 'device-mapper' 'dhclient' 'dracut-network' 'openresolv' 'chimerautils' 'dbus' 'elogind' 'polkit' 'NetworkManager' 'xorg-minimal' 'xorg-fonts' 'mesa-dri' 'pipewire' 'wireplumber' 'xdg-user-dirs' 'gnome' 'lightdm' 'lightdm-gtk3-greeter' 'firefox'
+	'linux' 'base-system-dinit' 'dinit-void' 'dracut' 'binutils' 'xz' 'device-mapper' 'dhclient' 'dracut-network' 'openresolv' 'chimerautils' 'dbus' 'elogind' 'polkit' 'NetworkManager' 'xorg-minimal' 'xorg-fonts' 'mesa-dri' 'pipewire' 'wireplumber' 'xdg-user-dirs' 'gnome' 'lightdm' 'lightdm-gtk3-greeter' 'firefox'
 mount_chroot
 cp /etc/resolv.conf "$ROOTFS/etc/resolv.conf"
 chroot "$ROOTFS" xbps-reconfigure -fa
