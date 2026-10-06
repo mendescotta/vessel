@@ -14,6 +14,8 @@ pub fn save_output(v: &ValidProfile, dir: &Path) -> io::Result<PathBuf> {
 
 pub fn save_output_with(v: &ValidProfile, dir: &Path, voidlab_repo: &str) -> io::Result<PathBuf> {
     let p = v.get();
+    repos::require_voidlab_repo(p, voidlab_repo)
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
     fs::create_dir_all(dir)?;
     if let Some(src) = &p.overlay_dir {
         if let (Ok(src), Ok(out)) = (src.canonicalize(), dir.canonicalize()) {

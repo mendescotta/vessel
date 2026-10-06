@@ -34,9 +34,11 @@ disable = []
 ```
 
 Optional `overlay_dir` (copied over the rootfs) and `post_rootfs_hook` (run in the rootfs chroot) are
-relative to the profile. Examples are in `examples/`. The `voidlab` preset is the
-[voidlab](https://github.com/mendescotta/voidlab) binary repository; point it elsewhere with
-`VESSEL_VOIDLAB_REPO` (a path or URL). `WORK` and `OUT` override the script's scratch and output folders.
+relative to the profile. Examples are in `examples/`. The `voidlab` preset needs `VESSEL_VOIDLAB_REPO`: the
+`repo/` directory of a local [voidlab](https://github.com/mendescotta/voidlab) checkout, or a repository URL.
+There is no default, because the build installs with `-y`, which imports a remote repository's signing key
+without asking: only point it at a URL whose key you trust. `WORK` and `OUT` override the script's scratch and
+output folders.
 
 ## Build
 

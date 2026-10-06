@@ -2,22 +2,30 @@ use crate::profile::{Profile, RepoPreset};
 
 pub const OFFICIAL: &str = "https://repo-default.voidlinux.org/current";
 
-/// The public voidlab binary repository, used when `VESSEL_VOIDLAB_REPO` is not set.
-pub const VOIDLAB_RELEASE_REPO: &str =
-    "https://github.com/mendescotta/voidlab/releases/download/repo";
-
-/// Where the `voidlab` repository preset points: `VESSEL_VOIDLAB_REPO` (a path or URL) or the public repository.
+/// Where the `voidlab` repository preset points: `VESSEL_VOIDLAB_REPO` (a local repository directory, or a
+/// URL), or empty when unset. There is deliberately no default: the build installs with `-y`, which imports a
+/// remote repository's signing key without asking, so a remote repository must be chosen explicitly.
 pub fn voidlab_repo_path() -> String {
     voidlab_repo_path_from(std::env::var("VESSEL_VOIDLAB_REPO").ok())
 }
 
 pub fn voidlab_repo_path_from(env: Option<String>) -> String {
-    env.filter(|s| !s.is_empty())
-        .unwrap_or_else(|| VOIDLAB_RELEASE_REPO.to_string())
+    env.unwrap_or_default()
+}
+
+/// The `voidlab` preset needs a repository to be named; refuse to generate without one.
+pub fn require_voidlab_repo(p: &Profile, path: &str) -> Result<(), String> {
+    if p.repos.presets.contains(&RepoPreset::Voidlab) && path.is_empty() {
+        return Err("the voidlab repository preset needs VESSEL_VOIDLAB_REPO: the repo/ directory of a local voidlab \
+             checkout, or a repository URL whose signing key you trust (the build imports unknown keys without asking)"
+            .to_string());
+    }
+    Ok(())
 }
 
 pub fn preset_urls(preset: RepoPreset, all: &[RepoPreset], voidlab: &str) -> Vec<String> {
     match preset {
+        RepoPreset::Voidlab if voidlab.is_empty() => Vec::new(),
         RepoPreset::Voidlab => vec![voidlab.to_string()],
         RepoPreset::Nonfree => vec![format!("{OFFICIAL}/nonfree")],
         RepoPreset::Multilib => {

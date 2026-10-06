@@ -42,15 +42,31 @@ fn voidlab_preset_uses_given_path_and_dedups() {
 }
 
 #[test]
-fn voidlab_path_prefers_env_then_the_public_repo() {
+fn voidlab_repo_has_no_default() {
     assert_eq!(repos::voidlab_repo_path_from(Some("/x".into())), "/x");
     assert_eq!(
         repos::voidlab_repo_path_from(None),
-        repos::VOIDLAB_RELEASE_REPO
+        "",
+        "a remote repository must be chosen explicitly"
+    );
+}
+
+#[test]
+fn the_voidlab_preset_requires_a_repository() {
+    let mut p = Profile::new_default();
+    p.repos.presets = vec![RepoPreset::Voidlab];
+    assert!(repos::require_voidlab_repo(&p, "")
+        .unwrap_err()
+        .contains("VESSEL_VOIDLAB_REPO"));
+    assert!(repos::require_voidlab_repo(&p, "/vl/repo").is_ok());
+    p.repos.presets.clear();
+    assert!(
+        repos::require_voidlab_repo(&p, "").is_ok(),
+        "profiles without the preset need nothing"
     );
     assert_eq!(
-        repos::voidlab_repo_path_from(Some(String::new())),
-        repos::VOIDLAB_RELEASE_REPO
+        repos::repo_list_with(&p, ""),
+        vec![repos::OFFICIAL.to_string()]
     );
 }
 
