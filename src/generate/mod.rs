@@ -67,7 +67,7 @@ pub fn enabled_services(p: &Profile) -> Vec<String> {
     let graphical = !p.desktops.is_empty();
     dedup(out)
         .into_iter()
-        .filter(|s| !p.services.disable.contains(s) && !(graphical && s == "dhcpcd"))
+        .filter(|s| !(p.services.disable.contains(s) || graphical && s == "dhcpcd"))
         .collect()
 }
 

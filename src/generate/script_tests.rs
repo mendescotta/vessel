@@ -1,8 +1,6 @@
 use super::*;
 use crate::profile::validate::assume_valid;
-use crate::profile::{
-    Bootloader as B, Desktop, DisplayManager as Dm, Init, Profile, RepoPreset, Userland,
-};
+use crate::profile::{Bootloader as B, Desktop, DisplayManager as Dm, Init, Profile, RepoPreset};
 use std::path::PathBuf;
 
 const VOIDLAB: &str = "/voidlab/repo";
@@ -14,16 +12,15 @@ fn gen(p: Profile) -> String {
 fn golden_profiles() -> Vec<(&'static str, Profile)> {
     let runit = Profile::new_default();
 
-    let mut chimera = Profile::new_default();
-    chimera.name = "void-gnome-dinit".into();
-    chimera.init = Init::Dinit;
-    chimera.userland = Userland::Chimerautils;
-    chimera.bootloaders = vec![B::Limine];
-    chimera.desktops = vec![Desktop::Gnome];
-    chimera.display_manager = Dm::Lightdm;
-    chimera.repos.presets = vec![RepoPreset::Voidlab];
-    chimera.packages.extra = vec!["firefox".into()];
-    chimera.packages.exclude = vec!["nano".into()];
+    let mut limine_gnome = Profile::new_default();
+    limine_gnome.name = "void-gnome-dinit".into();
+    limine_gnome.init = Init::Dinit;
+    limine_gnome.bootloaders = vec![B::Limine];
+    limine_gnome.desktops = vec![Desktop::Gnome];
+    limine_gnome.display_manager = Dm::Lightdm;
+    limine_gnome.repos.presets = vec![RepoPreset::Voidlab];
+    limine_gnome.packages.extra = vec!["firefox".into()];
+    limine_gnome.packages.exclude = vec!["nano".into()];
 
     let mut gnu = Profile::new_default();
     gnu.name = "dinit-xfce".into();
@@ -37,7 +34,7 @@ fn golden_profiles() -> Vec<(&'static str, Profile)> {
 
     vec![
         ("runit-grub-console", runit),
-        ("dinit-bsdutils-limine-gnome", chimera),
+        ("dinit-gnu-limine-gnome", limine_gnome),
         ("dinit-gnu-grub-xfce", gnu),
     ]
 }
@@ -322,17 +319,6 @@ fn no_bootloader_builds_a_plain_iso() {
     assert!(s.contains("xorriso -as mkisofs"));
     assert!(!s.contains("-eltorito"));
     assert!(!s.contains("-isohybrid-gpt-basdat"));
-}
-
-#[test]
-fn generated_scripts_reference_no_noid() {
-    for (name, p) in golden_profiles() {
-        let script = gen(p);
-        assert!(
-            !script.to_lowercase().contains("noid"),
-            "{name} generated script mentions noid"
-        );
-    }
 }
 
 #[test]

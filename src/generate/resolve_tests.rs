@@ -1,5 +1,5 @@
 use super::*;
-use crate::profile::{Desktop, DisplayManager as Dm, Init, Profile, RepoPreset, Userland};
+use crate::profile::{Desktop, DisplayManager as Dm, Init, Profile, RepoPreset};
 
 fn count(v: &[String], s: &str) -> usize {
     v.iter().filter(|x| *x == s).count()
@@ -71,10 +71,9 @@ fn the_voidlab_preset_requires_a_repository() {
 }
 
 #[test]
-fn required_packages_dinit_chimera_gnome_lightdm() {
+fn required_packages_dinit_gnome_lightdm() {
     let mut p = Profile::new_default();
     p.init = Init::Dinit;
-    p.userland = Userland::Chimerautils;
     p.desktops = vec![Desktop::Gnome];
     p.display_manager = Dm::Lightdm;
     let pkgs = required_packages(&p);
@@ -83,7 +82,6 @@ fn required_packages_dinit_chimera_gnome_lightdm() {
         "base-system-dinit",
         "dinit-void",
         "dracut",
-        "chimerautils",
         "gnome",
         "lightdm",
         "lightdm-gtk3-greeter",

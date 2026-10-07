@@ -1,7 +1,5 @@
 use super::*;
-use crate::profile::{
-    Bootloader as B, Desktop, DisplayManager as Dm, Init, Profile, RepoPreset, Userland,
-};
+use crate::profile::{Bootloader as B, Desktop, DisplayManager as Dm, Init, Profile, RepoPreset};
 
 fn errors(p: &Profile) -> Vec<Issue> {
     validate(p)
@@ -99,8 +97,7 @@ fn required_repos() {
     assert!(!has_error(&p, "repos"));
 
     p.init = Init::Runit;
-    p.userland = Userland::Chimerautils;
-    assert_eq!(required_presets(&p), vec![RepoPreset::Voidlab]);
+    assert!(required_presets(&p).is_empty());
 }
 
 #[test]

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use super::{Bootloader, Desktop, DisplayManager, Init, Profile, RepoPreset, Userland};
+use super::{Bootloader, Desktop, DisplayManager, Init, Profile, RepoPreset};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Severity {
@@ -55,10 +55,6 @@ pub fn required_presets(p: &Profile) -> Vec<RepoPreset> {
     match p.init {
         Init::Runit => {}
         Init::Dinit => need(RepoPreset::Voidlab),
-    }
-    match p.userland {
-        Userland::Gnu => {}
-        Userland::Chimerautils => need(RepoPreset::Voidlab),
     }
     out
 }
@@ -121,14 +117,9 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
 
     for preset in required_presets(p) {
         if !p.repos.presets.contains(&preset) {
-            let who = if p.init != Init::Runit {
-                p.init.label()
-            } else {
-                p.userland.label()
-            };
             error(
                 "repos",
-                format!("{who} needs the {} repository", preset.id()),
+                format!("{} needs the {} repository", p.init.label(), preset.id()),
             );
         }
     }

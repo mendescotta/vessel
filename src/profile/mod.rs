@@ -54,7 +54,6 @@ fn de_presets<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Vec<RepoPreset>,
     use serde::de::Error;
     let ids = Vec::<String>::deserialize(d)?;
     ids.iter()
-        .filter(|id| id.as_str() != "noid")
         .map(|id| {
             RepoPreset::ALL
                 .iter()

@@ -27,7 +27,7 @@ macro_rules! axis {
 pub enum Init {
     #[serde(rename = "runit")]
     Runit,
-    #[serde(rename = "dinit", alias = "dinit-chimera", alias = "dinit-noid")]
+    #[serde(rename = "dinit", alias = "dinit-chimera")]
     Dinit,
 }
 
@@ -48,7 +48,6 @@ impl Init {
 
 axis!(Userland {
     Gnu => "gnu", "GNU coreutils";
-    Chimerautils => "chimerautils", "bsdutils";
 });
 
 axis!(Bootloader {

@@ -34,14 +34,14 @@ fn kebab_case_ids() {
         r#"version = 1
 name = "x"
 init = "dinit"
-userland = "chimerautils"
+userland = "gnu"
 bootloaders = ["limine", "refind"]
 display_manager = "cosmic-greeter"
 "#,
     )
     .unwrap();
     assert_eq!(p.init, Init::Dinit);
-    assert_eq!(p.userland, Userland::Chimerautils);
+    assert_eq!(p.userland, Userland::Gnu);
     assert_eq!(p.bootloaders, vec![Bootloader::Limine, Bootloader::Refind]);
     assert_eq!(p.display_manager, DisplayManager::CosmicGreeter);
 }

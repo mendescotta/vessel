@@ -3,7 +3,7 @@ use std::process::Command;
 
 use crate::generate::{enabled_services, repos, required_packages};
 use crate::profile::validate::required_presets;
-use crate::profile::{Bootloader, Desktop, DisplayManager, Init, Profile, RepoPreset, Userland};
+use crate::profile::{Bootloader, Desktop, DisplayManager, Init, Profile, RepoPreset};
 
 pub trait HostProbe {
     fn read(&self, path: &str) -> Option<String>;
@@ -82,10 +82,6 @@ pub fn snapshot_with(host: &dyn HostProbe, voidlab_repo: &str) -> (Profile, Vec<
             Vec::new()
         })
     };
-
-    if has("chimerautils") {
-        p.userland = Userland::Chimerautils;
-    }
 
     const DESKTOP_METAS: &[(&str, Desktop)] = &[
         ("gnome", Desktop::Gnome),

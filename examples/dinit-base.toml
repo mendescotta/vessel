@@ -1,9 +1,9 @@
-# Console live ISO on dinit with bsdutils, GRUB (BIOS + UEFI).
+# Console live ISO on dinit with GNU coreutils, GRUB (BIOS + UEFI).
 version = 1
 name = "dinit-base"
 arch = "x86_64"
 init = "dinit"
-userland = "chimerautils"
+userland = "gnu"
 bootloaders = ["grub"]
 uefi_only = false
 desktops = []

@@ -5,7 +5,6 @@ use super::{Init, Profile, Userland};
 pub enum Support {
     Standard,
     Supported,
-    Experimental,
 }
 
 impl Support {
@@ -13,7 +12,6 @@ impl Support {
         match self {
             Self::Standard => "Standard",
             Self::Supported => "Supported",
-            Self::Experimental => "Experimental",
         }
     }
 }
@@ -21,7 +19,6 @@ impl Support {
 pub fn support(init: Init, userland: Userland) -> Support {
     match (init, userland) {
         (Init::Runit, Userland::Gnu) => Support::Standard,
-        (Init::Runit, Userland::Chimerautils) => Support::Experimental,
         (Init::Dinit, _) => Support::Supported,
     }
 }

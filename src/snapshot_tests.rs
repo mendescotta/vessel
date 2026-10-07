@@ -54,20 +54,20 @@ fn dinit_gnome_host() -> FakeHost {
         .file("/usr/share/xbps.d/10-repository-nonfree.conf", "repository=https://repo-default.voidlinux.org/current/nonfree\n")
         .cmd(
             "xbps-query -l",
-            "ii base-system-dinit-0.1_1  x\nii chimerautils-15.1.1_3  x\nii gnome-51.0_1  x\nii lightdm-1.32.0_2  x\nii firefox-140.0_1  x\n",
+            "ii base-system-dinit-0.1_1  x\nii gnome-51.0_1  x\nii lightdm-1.32.0_2  x\nii firefox-140.0_1  x\n",
         )
         .cmd("xbps-query -m", "base-system-dinit-0.1_1\ngnome-51.0_1\nlightdm-1.32.0_2\nfirefox-140.0_1\nlinux-6.18_1\n")
         .dir("/boot/grub", &[])
 }
 
 #[test]
-fn seeds_dinit_chimera_gnome_host() {
+fn seeds_dinit_gnome_host() {
     let (p, warnings) = snapshot_with(&dinit_gnome_host(), "/home/u/Projects/voidlab/voidlab/repo");
     assert!(warnings.is_empty(), "{warnings:?}");
     assert_eq!(p.name, "mybox-snapshot");
     assert_eq!(p.live.hostname, "mybox");
     assert_eq!(p.init, Init::Dinit);
-    assert_eq!(p.userland, Userland::Chimerautils);
+    assert_eq!(p.userland, Userland::Gnu);
     assert_eq!(p.desktops, vec![Desktop::Gnome]);
     assert_eq!(p.display_manager, DisplayManager::Lightdm);
     assert_eq!(p.bootloaders, vec![Bootloader::Grub]);

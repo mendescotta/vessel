@@ -15,7 +15,7 @@ cd <dir> && sudo ./build.sh        # ISO lands in out/<name>-<YYYYMMDD>.iso
 version = 1
 name = "dinit-base"
 init = "dinit"                  # runit | dinit
-userland = "chimerautils"       # gnu | chimerautils
+userland = "gnu"
 bootloaders = ["grub"]          # grub | limine | refind (refind: UEFI only)
 desktops = []                   # gnome cosmic cinnamon xfce budgie kde; empty = console
 display_manager = "none"        # none lightdm sddm gdm cosmic-greeter
@@ -51,7 +51,7 @@ x86_64 glibc only. No musl, disk images or package builds.
 ## References
 
 - [void-mklive](https://github.com/void-linux/void-mklive): the Void live-ISO tooling the generated script follows; the `vmklive` dracut module in `assets/vmklive/` comes from it (license in `assets/vmklive/COPYING`).
-- [dinit-chimera](https://github.com/chimera-linux/dinit-chimera) and [Chimera Linux](https://chimera-linux.org/): the dinit service suite and chimerautils userland the `dinit` and `chimerautils` options build on.
+- [dinit-chimera](https://github.com/chimera-linux/dinit-chimera) and [Chimera Linux](https://chimera-linux.org/): the dinit service suite the `dinit` option builds on.
 - [Void Linux](https://voidlinux.org/) and [xbps](https://github.com/void-linux/xbps).
 
 Licensed under GPL-3.0-or-later.
