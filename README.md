@@ -51,7 +51,7 @@ x86_64 glibc only. No musl, disk images or package builds.
 ## References
 
 - [void-mklive](https://github.com/void-linux/void-mklive): the Void live-ISO tooling the generated script follows; the `vmklive` dracut module in `assets/vmklive/` comes from it (license in `assets/vmklive/COPYING`).
-- [noid-linux/noid-mklive](https://github.com/noid-linux/noid-mklive): the dinit-aware fork of void-mklive whose `vmklive` module changes `assets/vmklive/` is adapted from.
+- [noid-linux/noid-mklive](https://github.com/noid-linux/noid-mklive): the dinit-aware fork of void-mklive; the dinit changes in `assets/vmklive/` are adapted from it.
 - [dinit-chimera](https://github.com/chimera-linux/dinit-chimera) and [Chimera Linux](https://chimera-linux.org/): the dinit service suite the `dinit` option builds on.
 - [Void Linux](https://voidlinux.org/) and [xbps](https://github.com/void-linux/xbps).
 
