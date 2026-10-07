@@ -220,3 +220,12 @@ fn examples_validate() {
         assert!(valid.is_some(), "{name}");
     }
 }
+
+#[test]
+fn musl_arch_is_accepted_but_not_with_multilib() {
+    let mut p = Profile::new_default();
+    p.arch = "x86_64-musl".into();
+    assert!(!has_error(&p, "arch"));
+    p.repos.presets.push(RepoPreset::Multilib);
+    assert!(has_error(&p, "repos"));
+}

@@ -14,6 +14,7 @@ cd <dir> && sudo ./build.sh        # ISO lands in out/<name>-<YYYYMMDD>.iso
 ```toml
 version = 1
 name = "dinit-base"
+arch = "x86_64"                  # x86_64 | x86_64-musl (musl: no multilib)
 init = "dinit"                  # runit | dinit
 userland = "gnu"
 bootloaders = ["grub"]          # grub | limine | refind (refind: UEFI only)

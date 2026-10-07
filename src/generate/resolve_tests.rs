@@ -175,3 +175,18 @@ fn live_cmdline_uses_current_overlay_option() {
         assert!(!c.contains("rd.live.overlay"), "{c}");
     }
 }
+
+#[test]
+fn musl_profile_uses_the_musl_repositories() {
+    let mut p = Profile::new_default();
+    p.arch = "x86_64-musl".into();
+    p.repos.presets = vec![RepoPreset::Nonfree];
+    let list = repos::repo_list_with(&p, "");
+    assert_eq!(
+        list,
+        vec![
+            format!("{}/musl/nonfree", repos::OFFICIAL),
+            format!("{}/musl", repos::OFFICIAL),
+        ]
+    );
+}

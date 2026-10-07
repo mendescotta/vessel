@@ -23,15 +23,30 @@ pub fn require_voidlab_repo(p: &Profile, path: &str) -> Result<(), String> {
     Ok(())
 }
 
-pub fn preset_urls(preset: RepoPreset, all: &[RepoPreset], voidlab: &str) -> Vec<String> {
+/// The official repository for an architecture: musl lives under `/musl`.
+pub fn official(arch: &str) -> String {
+    if arch.ends_with("-musl") {
+        format!("{OFFICIAL}/musl")
+    } else {
+        OFFICIAL.to_string()
+    }
+}
+
+pub fn preset_urls(
+    preset: RepoPreset,
+    all: &[RepoPreset],
+    voidlab: &str,
+    arch: &str,
+) -> Vec<String> {
+    let official = official(arch);
     match preset {
         RepoPreset::Voidlab if voidlab.is_empty() => Vec::new(),
         RepoPreset::Voidlab => vec![voidlab.to_string()],
-        RepoPreset::Nonfree => vec![format!("{OFFICIAL}/nonfree")],
+        RepoPreset::Nonfree => vec![format!("{official}/nonfree")],
         RepoPreset::Multilib => {
-            let mut v = vec![format!("{OFFICIAL}/multilib")];
+            let mut v = vec![format!("{official}/multilib")];
             if all.contains(&RepoPreset::Nonfree) {
-                v.push(format!("{OFFICIAL}/multilib/nonfree"));
+                v.push(format!("{official}/multilib/nonfree"));
             }
             v
         }
@@ -41,8 +56,8 @@ pub fn preset_urls(preset: RepoPreset, all: &[RepoPreset], voidlab: &str) -> Vec
 pub fn repo_list_with(p: &Profile, voidlab: &str) -> Vec<String> {
     let mut out = p.repos.custom.clone();
     for preset in &p.repos.presets {
-        out.extend(preset_urls(*preset, &p.repos.presets, voidlab));
+        out.extend(preset_urls(*preset, &p.repos.presets, voidlab, &p.arch));
     }
-    out.push(OFFICIAL.to_string());
+    out.push(official(&p.arch));
     super::dedup(out)
 }

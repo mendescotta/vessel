@@ -72,13 +72,19 @@ pub fn validate(p: &Profile) -> (Vec<Issue>, Option<ValidProfile>) {
     if p.name.trim().is_empty() {
         error("name", "give the profile a name".into());
     }
-    if p.arch != "x86_64" {
+    if p.arch != "x86_64" && p.arch != "x86_64-musl" {
         error(
             "arch",
             format!(
-                "architecture {:?} is not supported yet (only x86_64)",
+                "architecture {:?} is not supported yet (x86_64 or x86_64-musl)",
                 p.arch
             ),
+        );
+    }
+    if p.arch.ends_with("-musl") && p.repos.presets.contains(&RepoPreset::Multilib) {
+        error(
+            "repos",
+            "the multilib repository does not exist for musl".into(),
         );
     }
     if !is_token(&p.kernel) {
