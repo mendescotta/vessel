@@ -47,7 +47,7 @@ output folders.
 cargo build --release && cargo test
 ```
 
-x86_64 glibc only. No musl, disk images or package builds.
+Targets `x86_64` and `x86_64-musl` (set `arch` in the profile; musl has no multilib). No disk images or package builds.
 
 ## References
 

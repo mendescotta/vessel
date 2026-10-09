@@ -788,7 +788,6 @@ name = "vessel"
 version = "0.1.0"
 dependencies = [
  "async-channel",
- "gdk4",
  "gio",
  "glib",
  "gtk4",

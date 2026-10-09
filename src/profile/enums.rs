@@ -27,7 +27,7 @@ macro_rules! axis {
 pub enum Init {
     #[serde(rename = "runit")]
     Runit,
-    #[serde(rename = "dinit", alias = "dinit-chimera")]
+    #[serde(rename = "dinit")]
     Dinit,
 }
 

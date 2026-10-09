@@ -15,18 +15,6 @@ fn select_sets_stack_and_adds_repos() {
 }
 
 #[test]
-fn old_init_ids_load_as_dinit() {
-    for id in ["dinit", "dinit-chimera"] {
-        #[derive(serde::Deserialize)]
-        struct W {
-            init: Init,
-        }
-        let w: W = toml::from_str(&format!("init = \"{id}\"")).unwrap();
-        assert_eq!(w.init, Init::Dinit);
-    }
-}
-
-#[test]
 fn unknown_repo_preset_errors() {
     let toml = format!(
         "{}\n[repos]\npresets = [\"bogus\"]\n",
